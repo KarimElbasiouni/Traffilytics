@@ -1,0 +1,39 @@
+# Traffilytics default configuration (paths relative to repo root)
+
+data:
+  root: ./data
+  raw: ./data/raw
+  annotations: ./data/annotations
+  gt_trajectories: ./data/gt_trajectories
+  processed: ./data/processed
+
+video:
+  # Prefer DRIFT stabilized clips when available (stabilization itself is not a focus)
+  prefer_stabilized: true
+  extensions: [".mp4", ".avi", ".mov", ".mkv"]
+  # Extract every Nth frame for 4K throughput (NFR-PERF-002); set to 1 for all frames
+  frame_stride: 5
+  # Optional max frames for smoke / debug (null = no limit)
+  max_frames: null
+  # Image format for extracted frames
+  frame_image_format: "jpg"
+  jpeg_quality: 90
+
+ingest:
+  default_source: drift
+  # If true, treat path/name hints containing "stabil" as stabilized=true
+  infer_stabilized_from_name: true
+
+drift:
+  # Hugging Face dataset id
+  hf_dataset: Hj-Lee/The-DRIFT
+  # Local layout under data/
+  raw_subdir: raw
+  annotations_subdir: annotations
+  gt_trajectories_subdir: gt_trajectories
+
+models:
+  root: ./models
+  configs: ./models/configs
+  # Traffilytics-trained weights path (Epic 2+)
+  weights: ./models/your_obb.pt

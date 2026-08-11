@@ -1,0 +1,70 @@
+# Traffilytics .gitignore
+# Keeps secrets, large media, model weights, and generated artifacts out of git
+# while preserving empty data/ folder placeholders (.gitkeep) and training configs.
+
+# Secrets and local env
+.env
+.env.local
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Conda
+.conda/
+
+# Data (large media and artifacts — keep .gitkeep)
+data/raw/*
+!data/raw/.gitkeep
+data/annotations/*
+!data/annotations/.gitkeep
+data/gt_trajectories/*
+!data/gt_trajectories/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+
+# Model weights (keep configs)
+models/*.pt
+models/*.pth
+models/*.onnx
+models/runs/
+models/configs/drift_obb_data.yaml
+!models/configs/
+!models/configs/train_obb.yaml
+!models/configs/.gitkeep
+
+# Media
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.jpg
+*.jpeg
+*.png
+!docs/**
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
