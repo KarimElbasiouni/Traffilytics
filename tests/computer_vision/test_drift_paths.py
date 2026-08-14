@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from adapters.drift.paths import (
+from adapters.drift.drift_layout import (
     DriftLayout,
     is_stabilized_name,
     parse_site_from_name,
