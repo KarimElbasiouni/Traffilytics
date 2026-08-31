@@ -1,1 +1,17 @@
-"""Detection package (Epic 2+). Training entrypoint: scripts/train_obb.py."""
+"""Detection package (Epic 2+): OBB types, training, evaluation, and inference."""
+
+from computer_vision.detection.types import (
+    CLASS_NAMES,
+    Detection,
+    as_corners,
+    corners_to_cxcywhr,
+    cxcywhr_to_corners,
+)
+
+__all__ = [
+    "CLASS_NAMES",
+    "Detection",
+    "as_corners",
+    "corners_to_cxcywhr",
+    "cxcywhr_to_corners",
+]
