@@ -9,8 +9,10 @@ import yaml
 
 from adapters.drift.obb_annotations import (
     DriftOBBDataset,
-    parse_obb_label_line,
+    install_github_obb_splits,
     load_obb_label_file,
+    parse_obb_label_line,
+    resolve_github_model_dir,
 )
 
 
@@ -58,3 +60,59 @@ def test_dataset_adapter_and_yaml(tmp_path: Path) -> None:
     payload = yaml.safe_load(out.read_text(encoding="utf-8"))
     assert payload["train"] == "train/images"
     assert payload["names"][1] == "car"
+
+
+def _write_github_model_tree(root: Path, *, nest_under_model: bool = False) -> Path:
+    """Create a tiny GitHub-style train/valid/test tree; return the model/ dir."""
+    model = root / "model" if nest_under_model else root
+    for split, stem, class_id in (
+        ("train", "A_frame_0000", "1"),
+        ("valid", "A_frame_0001", "0"),
+        ("test", "A_frame_0002", "2"),
+    ):
+        images = model / split / "images"
+        labels = model / split / "labels"
+        images.mkdir(parents=True)
+        labels.mkdir(parents=True)
+        (images / f"{stem}.jpg").write_bytes(b"fake")
+        (labels / f"{stem}.txt").write_text(
+            f"{class_id} 0.1 0.2 0.3 0.2 0.3 0.4 0.1 0.4\n", encoding="utf-8"
+        )
+    (model / "data.yaml").write_text("names: {0: bus}\n", encoding="utf-8")
+    return model
+
+
+def test_resolve_github_model_dir_accepts_repo_root_or_model(tmp_path: Path) -> None:
+    """Repo root (…/The-DRIFT) and its model/ folder both resolve to the split tree."""
+    model = _write_github_model_tree(tmp_path, nest_under_model=True)
+    assert resolve_github_model_dir(tmp_path) == model
+    assert resolve_github_model_dir(model) == model
+
+
+def test_resolve_github_model_dir_rejects_empty(tmp_path: Path) -> None:
+    """A directory without train/valid raises FileNotFoundError."""
+    with pytest.raises(FileNotFoundError, match="model/"):
+        resolve_github_model_dir(tmp_path)
+
+
+def test_sync_and_install_github_obb_splits(tmp_path: Path) -> None:
+    """install_github_obb_splits copies train/valid/test + data.yaml into dest."""
+    repo = tmp_path / "The-DRIFT"
+    dest = tmp_path / "annotations"
+    _write_github_model_tree(repo, nest_under_model=True)
+
+    written = install_github_obb_splits(repo, dest)
+    assert written == dest.resolve()
+    assert (dest / "train" / "images" / "A_frame_0000.jpg").is_file()
+    assert (dest / "valid" / "labels" / "A_frame_0001.txt").is_file()
+    assert (dest / "test" / "images" / "A_frame_0002.jpg").is_file()
+    assert (dest / "data.yaml").is_file()
+
+    ds = DriftOBBDataset.from_annotations_root(dest)
+    assert ds.count_pairs("train") == 1
+    assert ds.count_pairs("val") == 1
+    assert ds.count_pairs("test") == 1
+
+    # Same dest is a no-op (already in place).
+    again = install_github_obb_splits(dest, dest)
+    assert again == dest.resolve()

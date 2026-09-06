@@ -16,6 +16,14 @@ import yaml
 
 CLASS_NAMES = {0: "bus", 1: "car", 2: "truck"}
 
+# Full GitHub model/{train,valid,test} tree (paper: 2,301 frames / 292,570 instances).
+# Do not commit this set; do not fetch it in CI or pytest.
+DRIFT_GITHUB_URL = "https://github.com/AIxMobility/The-DRIFT"
+FULL_OBB_FRAME_COUNT = 2301
+FULL_OBB_INSTANCE_COUNT_APPROX = 300_000
+_GITHUB_SPLITS = ("train", "valid", "test")
+
+
 
 @dataclass(frozen=True)
 class OBBBox:
@@ -138,11 +146,39 @@ class DriftOBBDataset:
         return out
 
 
+def resolve_github_model_dir(src: str | Path) -> Path:
+    """Return the directory that contains GitHub ``train`` / ``valid`` / ``test`` splits.
+
+    Accepts either the The-DRIFT repo root (``…/The-DRIFT`` with a ``model/``
+    child) or the ``model/`` directory itself.
+    """
+    src_path = Path(src).expanduser().resolve()
+    if not src_path.is_dir():
+        raise FileNotFoundError(f"OBB source is not a directory: {src_path}")
+
+    if _has_github_splits(src_path):
+        return src_path
+    nested = src_path / "model"
+    if _has_github_splits(nested):
+        return nested
+    raise FileNotFoundError(
+        f"Expected GitHub model/{{train,valid,test}} under {src_path} or {nested}. "
+        f"Clone {DRIFT_GITHUB_URL} and pass the repo root or its model/ folder."
+    )
+
+
+def _has_github_splits(path: Path) -> bool:
+    """True when ``path`` has a ``train`` split and a ``valid`` or ``val`` split."""
+    if not (path / "train").is_dir():
+        return False
+    return (path / "valid").is_dir() or (path / "val").is_dir()
+
+
 def sync_github_style_layout(src_annotations: Path, dest: Path) -> Path:
     """Copy a DRIFT GitHub-style model/{train,valid,test} tree into dest."""
     dest = dest.resolve()
     dest.mkdir(parents=True, exist_ok=True)
-    for split in ("train", "valid", "test"):
+    for split in _GITHUB_SPLITS:
         src_split = src_annotations / split
         if src_split.is_dir():
             shutil.copytree(src_split, dest / split, dirs_exist_ok=True)
@@ -150,3 +186,15 @@ def sync_github_style_layout(src_annotations: Path, dest: Path) -> Path:
     if src_yaml.is_file():
         shutil.copy2(src_yaml, dest / "data.yaml")
     return dest
+
+
+def install_github_obb_splits(src: str | Path, dest: str | Path) -> Path:
+    """Resolve a The-DRIFT clone and copy ``model/`` splits into ``dest``.
+
+    The full set is ~2,301 frames / ~300K instances and must stay gitignored.
+    """
+    model_dir = resolve_github_model_dir(src)
+    dest_path = Path(dest).expanduser().resolve()
+    if model_dir == dest_path:
+        return dest_path
+    return sync_github_style_layout(model_dir, dest_path)
