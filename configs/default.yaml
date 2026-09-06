@@ -37,3 +37,11 @@ models:
   configs: ./models/configs
   # Traffilytics-trained weights path (Epic 2+)
   weights: ./models/your_obb.pt
+
+detection:
+  weights: ./models/your_obb.pt
+  conf_threshold: 0.25
+  iou_threshold: 0.7
+  imgsz: 640
+  device: auto          # cuda if available else cpu
+  allow_pretrained: false  # wiring only; never the product default

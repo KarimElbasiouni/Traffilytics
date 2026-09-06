@@ -1,6 +1,13 @@
 """Detection package (Epic 2+): OBB types, training, evaluation, and inference."""
 
-from computer_vision.detection.detector import DetectorError, VehicleDetector
+from computer_vision.detection.detector import (
+    DetectWriteResult,
+    DetectorError,
+    VehicleDetector,
+    detect_and_write,
+    detect_video,
+    write_detections_json,
+)
 from computer_vision.detection.evaluator import (
     DetectionEvaluator,
     EvalPlan,
@@ -31,6 +38,7 @@ __all__ = [
     "Detection",
     "DetectionEvaluator",
     "DetectionTrainer",
+    "DetectWriteResult",
     "DetectorError",
     "EvalPlan",
     "EvalResult",
@@ -42,7 +50,10 @@ __all__ = [
     "as_corners",
     "corners_to_cxcywhr",
     "cxcywhr_to_corners",
+    "detect_and_write",
+    "detect_video",
     "draw_obb_overlay",
+    "write_detections_json",
     "write_metrics_json",
     "write_obb_overlay",
 ]
