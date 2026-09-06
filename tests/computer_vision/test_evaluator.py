@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 from pathlib import Path
 from typing import Any
@@ -9,6 +10,8 @@ from typing import Any
 import cv2
 import numpy as np
 import pytest
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 from adapters.drift.obb_annotations import OBBBox
 from computer_vision.detection.evaluator import (
@@ -374,3 +377,92 @@ def test_evaluator_rejects_bad_conf_threshold(tmp_path: Path) -> None:
     """Constructor rejects conf_threshold outside [0, 1]."""
     with pytest.raises(ValueError, match="conf_threshold"):
         DetectionEvaluator(conf_threshold=1.5, data=tmp_path / "data.yaml")
+
+
+def _load_eval_obb_main() -> Any:
+    """Load scripts/eval_obb.py as a module (scripts/ is not a package)."""
+    path = _REPO_ROOT / "scripts" / "eval_obb.py"
+    spec = importlib.util.spec_from_file_location("eval_obb_cli", path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.main
+
+
+def test_cli_dry_run_ok(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """eval_obb.py --dry-run prints Dry run OK and does not write metrics."""
+    data_yaml = _write_data_yaml(tmp_path / "data.yaml")
+    main = _load_eval_obb_main()
+    code = main(
+        [
+            "--data",
+            str(data_yaml),
+            "--weights",
+            str(tmp_path / "missing.pt"),
+            "--dry-run",
+        ]
+    )
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Dry run OK" in captured.out
+    assert "not starting evaluation" in captured.out
+    assert not (tmp_path / "runs" / "eval_obb" / "metrics.json").exists()
+
+
+def test_cli_dry_run_reports_baseline(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """--baseline is resolved on dry-run and labeled missing when the file is absent."""
+    data_yaml = _write_data_yaml(tmp_path / "data.yaml")
+    baseline = tmp_path / "best.pt"
+    main = _load_eval_obb_main()
+    code = main(
+        [
+            "--data",
+            str(data_yaml),
+            "--weights",
+            str(tmp_path / "your_obb.pt"),
+            "--baseline",
+            str(baseline),
+            "--dry-run",
+        ]
+    )
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Baseline" in captured.out
+    assert "missing" in captured.out
+    assert "best.pt" in captured.out
+
+
+def test_cli_missing_weights_error(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Without --dry-run, missing your_obb.pt is exit 1 (NFR-ACC-004)."""
+    data_yaml = _write_data_yaml(tmp_path / "data.yaml")
+    main = _load_eval_obb_main()
+    code = main(
+        ["--data", str(data_yaml), "--weights", str(tmp_path / "your_obb.pt")]
+    )
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "OBB weights not found" in captured.err
+    assert "FR-DET-001" in captured.err
+
+
+def test_cli_missing_data_yaml(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Missing dataset YAML returns exit 1 with a clear error."""
+    main = _load_eval_obb_main()
+    code = main(
+        [
+            "--data",
+            str(tmp_path / "absent.yaml"),
+            "--weights",
+            str(tmp_path / "your_obb.pt"),
+            "--dry-run",
+        ]
+    )
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "data.yaml not found" in captured.err
