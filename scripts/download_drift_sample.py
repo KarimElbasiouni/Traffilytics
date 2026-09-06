@@ -6,6 +6,10 @@ Videos are not hosted on the Hugging Face trajectory dataset. This script pulls:
   - One GT trajectory CSV from Hugging Face (eval only) → data/gt_trajectories/
   - Optional YOLO OBB label/image samples from GitHub → data/annotations/
 
+Those annotation samples are **two frames** for layout smoke only. The full
+GitHub ``model/{train,valid,test}`` tree (~2,301 frames / ~300K instances) is
+gitignored and must not be fetched in CI — use ``scripts/download_obb_dataset.py``.
+
 Prefer stabilized clips when available; Traffilytics does not reimplement Stabilo.
 """
 
@@ -124,7 +128,13 @@ def download_annotation_samples(layout: DriftLayout, *, force: bool = False) -> 
 
 def build_parser() -> argparse.ArgumentParser:
     """Define CLI flags for which sample assets to download and whether to ingest afterward."""
-    p = argparse.ArgumentParser(description="Download DRIFT sample assets into data/")
+    p = argparse.ArgumentParser(
+        description="Download DRIFT sample assets into data/",
+        epilog=(
+            "Full OBB splits (~2,301 frames / ~300K instances, gitignored): "
+            "python scripts/download_obb_dataset.py --full --src /path/to/The-DRIFT"
+        ),
+    )
     p.add_argument("--config", default="configs/default.yaml")
     p.add_argument("--force", action="store_true", help="Re-download even if files exist")
     p.add_argument("--skip-video", action="store_true")

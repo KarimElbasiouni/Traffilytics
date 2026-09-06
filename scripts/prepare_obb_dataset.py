@@ -38,7 +38,9 @@ def main(argv: list[str] | None = None) -> int:
     except FileNotFoundError as exc:
         print(
             f"ERROR: {exc}\n"
-            "Download samples first: python scripts/download_drift_sample.py",
+            "Layout smoke (2 frames): python scripts/download_drift_sample.py\n"
+            "Full GitHub model/ splits (~2,301 frames / ~300K instances): "
+            "python scripts/download_obb_dataset.py --full --src /path/to/The-DRIFT",
             file=sys.stderr,
         )
         return 1
@@ -54,7 +56,8 @@ def main(argv: list[str] | None = None) -> int:
     if train_n == 0:
         print(
             "WARNING: No train image/label pairs found. "
-            "Place full DRIFT OBB splits under data/annotations/ before training.",
+            "Place full DRIFT OBB splits under data/annotations/ "
+            "(python scripts/download_obb_dataset.py --full --src /path/to/The-DRIFT).",
             file=sys.stderr,
         )
     return 0

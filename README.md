@@ -70,13 +70,39 @@ python scripts/download_drift_sample.py
 
 See script help for options. Prefer stabilized videos; Traffilytics does **not** focus on reimplementing Stabilo.
 
+The sample downloader writes **two OBB frames** under `data/annotations/` for layout smoke only. That is not enough to train.
+
+## Full DRIFT OBB annotations (Epic 2)
+
+Real detector training needs the GitHub [`model/{train,valid,test}`](https://github.com/AIxMobility/The-DRIFT) splits:
+
+| | |
+|---|---|
+| Size | ~2,301 frames / ~300K OBB instances (bus / car / truck) |
+| Layout | `model/train`, `model/valid`, `model/test` (+ `data.yaml`) |
+| Dest | `data/annotations/` — **gitignored**, do not commit |
+| CI | **Do not** download this 4K set in pytest or CI |
+
+Clone [The-DRIFT](https://github.com/AIxMobility/The-DRIFT) (or otherwise obtain its `model/` tree), then copy into Traffilytics and write the Ultralytics YAML:
+
+```bash
+# --src may be the repo root or …/The-DRIFT/model
+python scripts/download_obb_dataset.py --full --src /path/to/The-DRIFT
+python scripts/prepare_obb_dataset.py
+```
+
+`--dry-run` prints the copy plan without writing files. `--full` is required so a huge copy cannot happen by accident. The helper only copies a **local** tree; it does not clone GitHub.
+
+Generated `models/configs/drift_obb_data.yaml` is gitignored.
+
 ## GPU / training note (Epic 2)
 
 This environment may only have CPU PyTorch. **YOLO OBB training needs a CUDA-capable host.**
 
 ```bash
-# 1) Download annotation samples (or place full DRIFT OBB splits under data/annotations/)
-python scripts/download_drift_sample.py
+# 1) Place full DRIFT OBB splits under data/annotations/ (see above)
+python scripts/download_obb_dataset.py --full --src /path/to/The-DRIFT
+# Layout smoke only (2 frames): python scripts/download_drift_sample.py
 
 # 2) Generate Ultralytics data.yaml
 python scripts/prepare_obb_dataset.py
