@@ -12,6 +12,7 @@ import numpy as np
 import pytest
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
+_DEFAULT_CONFIG = str(_REPO_ROOT / "configs" / "default.yaml")
 
 from adapters.drift.obb_annotations import OBBBox
 from computer_vision.detection.evaluator import (
@@ -395,6 +396,8 @@ def test_cli_dry_run_ok(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> N
     main = _load_eval_obb_main()
     code = main(
         [
+            "--config",
+            _DEFAULT_CONFIG,
             "--data",
             str(data_yaml),
             "--weights",
@@ -418,6 +421,8 @@ def test_cli_dry_run_reports_baseline(
     main = _load_eval_obb_main()
     code = main(
         [
+            "--config",
+            _DEFAULT_CONFIG,
             "--data",
             str(data_yaml),
             "--weights",
@@ -441,7 +446,14 @@ def test_cli_missing_weights_error(
     data_yaml = _write_data_yaml(tmp_path / "data.yaml")
     main = _load_eval_obb_main()
     code = main(
-        ["--data", str(data_yaml), "--weights", str(tmp_path / "your_obb.pt")]
+        [
+            "--config",
+            _DEFAULT_CONFIG,
+            "--data",
+            str(data_yaml),
+            "--weights",
+            str(tmp_path / "your_obb.pt"),
+        ]
     )
     captured = capsys.readouterr()
     assert code == 1
@@ -456,6 +468,8 @@ def test_cli_missing_data_yaml(
     main = _load_eval_obb_main()
     code = main(
         [
+            "--config",
+            _DEFAULT_CONFIG,
             "--data",
             str(tmp_path / "absent.yaml"),
             "--weights",

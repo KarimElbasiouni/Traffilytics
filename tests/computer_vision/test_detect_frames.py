@@ -23,6 +23,20 @@ from computer_vision.detection.detector import (
 from computer_vision.detection.types import Detection
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
+_DEFAULT_CONFIG = str(_REPO_ROOT / "configs" / "default.yaml")
+
+FR_DET_KEYS = {
+    "frame",
+    "class_id",
+    "class",
+    "confidence",
+    "center_x",
+    "center_y",
+    "width",
+    "height",
+    "angle",
+    "corners",
+}
 
 
 class _FakeOBB:
@@ -125,11 +139,18 @@ def test_write_detections_json_matches_fr_det_fields(tmp_path: Path) -> None:
     assert payload["n_detections"] == 1
     assert payload["n_frames"] == 1
     row = payload["detections"][0]
+    assert set(row) == FR_DET_KEYS
     assert row["frame"] == 12
     assert row["class_id"] == 1
     assert row["class"] == "car"
     assert row["confidence"] == pytest.approx(0.94)
+    assert row["center_x"] == pytest.approx(160.0)
+    assert row["center_y"] == pytest.approx(230.0)
+    assert row["width"] == pytest.approx(80.0)
+    assert row["height"] == pytest.approx(60.0)
+    assert row["angle"] == pytest.approx(0.0)
     assert len(row["corners"]) == 4
+    assert all(len(pt) == 2 for pt in row["corners"])
 
 
 def test_detect_and_write_stub_and_overlays(tmp_path: Path) -> None:
@@ -195,7 +216,7 @@ def test_detect_video_stub(tmp_path: Path) -> None:
 def test_cli_dry_run_no_source(capsys: pytest.CaptureFixture[str]) -> None:
     """detect_frames.py --dry-run with no source still exits 0."""
     main = _load_detect_frames_module().main
-    code = main(["--dry-run"])
+    code = main(["--config", _DEFAULT_CONFIG, "--dry-run"])
     captured = capsys.readouterr()
     assert code == 0
     assert "Dry run OK" in captured.out
@@ -212,6 +233,8 @@ def test_cli_dry_run_with_frames(
     main = _load_detect_frames_module().main
     code = main(
         [
+            "--config",
+            _DEFAULT_CONFIG,
             "--frames",
             str(frames),
             "--out",
@@ -237,6 +260,8 @@ def test_cli_missing_weights_error(
     main = _load_detect_frames_module().main
     code = main(
         [
+            "--config",
+            _DEFAULT_CONFIG,
             "--frames",
             str(frames),
             "--out",
@@ -258,6 +283,8 @@ def test_cli_missing_frames_error(
     main = _load_detect_frames_module().main
     code = main(
         [
+            "--config",
+            _DEFAULT_CONFIG,
             "--frames",
             str(tmp_path / "no_frames"),
             "--weights",
@@ -292,7 +319,16 @@ def test_cli_writes_detections_with_stub(
 
     monkeypatch.setattr(module, "VehicleDetector", fake_detector)
     code = module.main(
-        ["--frames", str(frames), "--out", str(dest), "--video-id", "clip"]
+        [
+            "--config",
+            _DEFAULT_CONFIG,
+            "--frames",
+            str(frames),
+            "--out",
+            str(dest),
+            "--video-id",
+            "clip",
+        ]
     )
     captured = capsys.readouterr()
     assert code == 0
@@ -309,7 +345,7 @@ def test_cli_no_source_without_dry_run(
 ) -> None:
     """A real run without --video-id / --frames / --video is exit 1."""
     main = _load_detect_frames_module().main
-    code = main([])
+    code = main(["--config", _DEFAULT_CONFIG])
     captured = capsys.readouterr()
     assert code == 1
     assert "Specify --video-id, --frames, or --video" in captured.err

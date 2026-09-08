@@ -203,6 +203,22 @@ class _FakeResult:
         self.obb = obb
 
 
+class _FakeTensor:
+    """Minimal torch.Tensor stand-in: detach/cpu/numpy without importing torch."""
+
+    def __init__(self, data: Any) -> None:
+        self._data = np.asarray(data)
+
+    def detach(self) -> "_FakeTensor":
+        return self
+
+    def cpu(self) -> "_FakeTensor":
+        return self
+
+    def numpy(self) -> np.ndarray:
+        return self._data
+
+
 class _StubYOLO:
     """Predictable YOLO stand-in: records predict kwargs and returns canned OBBs."""
 
@@ -262,6 +278,20 @@ def test_vehicle_detector_stub_returns_class_ids_and_confidence() -> None:
     payload = detections[1].to_dict()
     assert payload["class"] == "car"
     assert payload["corners"][0] == [40.0, 40.0]
+
+
+def test_vehicle_detector_tensor_like_obb() -> None:
+    """Ultralytics OBB fields are often tensors; parsing must not require GPU."""
+    corners = _sample_corners()
+    obb = _FakeOBB(
+        xyxyxyxy=_FakeTensor(corners),
+        conf=_FakeTensor([0.91, 0.84, 0.77]),
+        cls=_FakeTensor([0.0, 1.0, 2.0]),
+    )
+    detector = VehicleDetector(model=_StubYOLO(obb))
+    detections = detector.detect_objects(np.zeros((120, 160, 3), dtype=np.uint8))
+    assert [d.class_id for d in detections] == [0, 1, 2]
+    assert all(0.0 <= d.confidence <= 1.0 for d in detections)
 
 
 def test_vehicle_detector_applies_conf_threshold() -> None:
