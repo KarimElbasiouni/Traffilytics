@@ -4,6 +4,7 @@ data:
   root: ./data
   raw: ./data/raw
   annotations: ./data/annotations
+  # DRIFT GT CSVs — Epic 3 benchmarking only; unused for detection train/eval/infer
   gt_trajectories: ./data/gt_trajectories
   processed: ./data/processed
 
@@ -35,13 +36,18 @@ drift:
 models:
   root: ./models
   configs: ./models/configs
-  # Traffilytics-trained weights path (Epic 2+)
+  # Traffilytics-trained product weights (copied from Ultralytics best.pt after train)
   weights: ./models/your_obb.pt
 
+# Inference / eval defaults for VehicleDetector, scripts/detect_frames.py, and
+# scripts/eval_obb.py. Training hyperparameters live in models/configs/train_obb.yaml.
+# Product path loads only models/your_obb.pt (NFR-ACC-004). DRIFT best.pt is an
+# optional eval --baseline comparison only — never the product model.
+# GT trajectory CSVs (data.gt_trajectories) are unused until Epic 3 benchmarking.
 detection:
   weights: ./models/your_obb.pt
-  conf_threshold: 0.25
+  conf_threshold: 0.25   # FR-DET-004 scores below this are dropped
   iou_threshold: 0.7
   imgsz: 640
-  device: auto          # cuda if available else cpu
-  allow_pretrained: false  # wiring only; never the product default
+  device: auto           # cuda if available else cpu
+  allow_pretrained: false  # wiring only; never the product default (not FR-DET-001)

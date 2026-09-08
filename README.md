@@ -56,8 +56,8 @@ pytest
 |------|------|
 | `data/raw/` | DRIFT (or other) videos — prefer stabilized clips |
 | `data/annotations/` | DRIFT OBB labels / splits |
-| `data/gt_trajectories/` | DRIFT GT CSVs (**eval only**) |
-| `data/processed/` | Frames + `metadata.json` from Traffilytics ingest |
+| `data/gt_trajectories/` | DRIFT GT CSVs (**Epic 3 benchmark only** — unused for detection) |
+| `data/processed/` | Ingest frames + `metadata.json`; Epic 2 `detections.json` |
 
 Large media and `.pt` weights are gitignored.
 
@@ -95,27 +95,61 @@ python scripts/prepare_obb_dataset.py
 
 Generated `models/configs/drift_obb_data.yaml` is gitignored.
 
-## GPU / training note (Epic 2)
+## Train, evaluate, and detect (Epic 2)
 
-This environment may only have CPU PyTorch. **YOLO OBB training needs a CUDA-capable host.**
+**YOLO OBB training needs a CUDA-capable host.** This environment may only have CPU PyTorch. Dry-runs, pytest, and CLI wiring work here; product inference (FR-DET-001) needs `models/your_obb.pt` from a GPU train.
+
+DRIFT ground-truth trajectory CSVs under `data/gt_trajectories/` stay **unused** in this step. They are for Epic 3 tracker benchmarking only — never as live trajectories.
+
+Inference defaults (`conf_threshold`, `iou_threshold`, `imgsz`, `device`) live in [`configs/default.yaml`](configs/default.yaml) under `detection:`. Keep `detection.allow_pretrained: false`. Training hyperparameters: [`models/configs/train_obb.yaml`](models/configs/train_obb.yaml) (nano smoke checkpoint). On a GPU host, override `model` to `yolo11m-obb.pt` for a real train (DRIFT paper: YOLOv11m OBB, batch 4, IoU 0.7) — do not switch this CPU box to `m`. Annotation adapter: `adapters/drift/obb_annotations.py`.
+
+### CUDA host — train → eval → detect
 
 ```bash
+conda activate traffilytics
 # 1) Place full DRIFT OBB splits under data/annotations/ (see above)
 python scripts/download_obb_dataset.py --full --src /path/to/The-DRIFT
-# Layout smoke only (2 frames): python scripts/download_drift_sample.py
-
-# 2) Generate Ultralytics data.yaml
 python scripts/prepare_obb_dataset.py
 
-# 3) Dry-run path checks
-python scripts/train_obb.py --dry-run
-
-# 4) On a CUDA machine — train Traffilytics weights
+# 2) Train Traffilytics weights (copies best.pt → models/your_obb.pt)
 python scripts/train_obb.py --train-config models/configs/train_obb.yaml
-# Best weights are copied to models/your_obb.pt
+
+# 3) Held-out metrics + overlays
+python scripts/eval_obb.py --weights models/your_obb.pt
+
+# 4) Infer on ingested frames (Epic 3 input)
+python scripts/ingest_video.py --video data/raw/<clip>.mp4
+python scripts/detect_frames.py --video-id <video_id>
 ```
 
-Training config: [`models/configs/train_obb.yaml`](models/configs/train_obb.yaml). Annotation adapter: `adapters/drift/obb_annotations.py`.
+### CPU — path checks (no GPU, no weights required)
+
+```bash
+python scripts/train_obb.py --dry-run
+python scripts/eval_obb.py --dry-run
+python scripts/detect_frames.py --dry-run --video-id <video_id>
+```
+
+Missing `models/your_obb.pt` fails with a clear error. `--allow-pretrained` loads `yolo11n-obb.pt` with a loud warning — **CPU wiring only**, not FR-DET-001 compliant.
+
+### Evaluate held-out labels
+
+```bash
+python scripts/eval_obb.py --weights models/your_obb.pt
+# Optional: DRIFT best.pt comparison (metrics JSON only — never the product model)
+python scripts/eval_obb.py --weights models/your_obb.pt --baseline path/to/best.pt
+```
+
+Writes `models/runs/eval_obb/metrics.json` (mAP50 / mAP50-95) plus qualitative overlays.
+
+### Detect on ingested frames (Epic 3 input)
+
+```bash
+python scripts/detect_frames.py --video-id <video_id>
+python scripts/detect_frames.py --video-id <video_id> --overlays
+```
+
+Writes `data/processed/<video_id>/detections.json` (FR-DET records). Optional overlays: `data/processed/<video_id>/det_overlays/`.
 
 ## Attribution
 
