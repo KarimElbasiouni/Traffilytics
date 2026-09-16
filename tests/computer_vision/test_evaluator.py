@@ -89,9 +89,12 @@ def _write_data_yaml(path: Path, *, dataset_root: Path | None = None) -> Path:
                 "train: train/images",
                 "val: valid/images",
                 "names:",
-                "  0: bus",
-                "  1: car",
-                "  2: truck",
+                "  0: bike",
+                "  1: bus",
+                "  2: car",
+                "  3: other_vehicle",
+                "  4: taxi",
+                "  5: truck",
                 "",
             ]
         ),
@@ -192,7 +195,7 @@ def test_normalize_val_metrics_aliases_and_per_class() -> None:
     out = normalize_val_metrics(raw)
     assert out["mAP50"] == pytest.approx(0.71)
     assert out["mAP50-95"] == pytest.approx(0.44)
-    assert out["per_class"] == {"bus": 0.1, "car": 0.2, "truck": 0.3}
+    assert out["per_class"] == {"bike": 0.1, "bus": 0.2, "car": 0.3}
     assert out["raw"]["metrics/mAP50(B)"] == pytest.approx(0.71)
 
 
@@ -223,7 +226,7 @@ def test_evaluate_writes_metrics_json(tmp_path: Path) -> None:
 
     payload = json.loads(result.metrics_path.read_text(encoding="utf-8"))
     assert payload["metrics"]["mAP50"] == pytest.approx(0.55)
-    assert payload["metrics"]["per_class"]["car"] == pytest.approx(0.6)
+    assert payload["metrics"]["per_class"]["bus"] == pytest.approx(0.6)
     assert payload["n_overlays"] == 0
     assert payload["baseline"] is None
 

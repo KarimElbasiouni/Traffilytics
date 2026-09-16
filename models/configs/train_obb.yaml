@@ -22,5 +22,5 @@ patience: 20
 save: true
 plots: true
 
-# Classes (must match DRIFT)
-# 0: bus, 1: car, 2: truck
+# Classes (must match the UAV-OBB data.yaml)
+# 0: bike, 1: bus, 2: car, 3: other_vehicle, 4: taxi, 5: truck

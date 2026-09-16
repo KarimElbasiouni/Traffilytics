@@ -1,8 +1,8 @@
 """Detection record types and oriented-bounding-box geometry helpers.
 
-FR-DET-002/003/004: class_id 0/1/2 (bus/car/truck), polygon OBBs, confidence
-in [0, 1]. Geometry is unit-agnostic (pixels or normalized). Inference stores
-pixel corners; adapter labels stay normalized.
+FR-DET-002/003/004: class_id 0-5 (UAV-OBB vehicle classes), polygon OBBs,
+confidence in [0, 1]. Geometry is unit-agnostic (pixels or normalized).
+Inference stores pixel corners; adapter labels stay normalized.
 
 Center/size/angle uses the Ultralytics xywhr convention: ``width`` lies along
 ``angle`` (radians), ``height`` is perpendicular. Trackers may consume either
@@ -15,7 +15,16 @@ import math
 from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
-CLASS_NAMES: dict[int, str] = {0: "bus", 1: "car", 2: "truck"}
+# UAV-OBB class ids, in the order the dataset's data.yaml declares them.
+# Swapping training datasets means updating this map (FR-DET-002).
+CLASS_NAMES: dict[int, str] = {
+    0: "bike",
+    1: "bus",
+    2: "car",
+    3: "other_vehicle",
+    4: "taxi",
+    5: "truck",
+}
 
 Point = tuple[float, float]
 Corners = tuple[Point, Point, Point, Point]
@@ -125,7 +134,7 @@ class Detection:
 
     @property
     def class_name(self) -> str:
-        """Human-readable class label (bus / car / truck), or the raw id."""
+        """Human-readable UAV-OBB class label, or the raw id when unmapped."""
         return CLASS_NAMES.get(self.class_id, str(self.class_id))
 
     def as_cxcywhr(self) -> CxCyWhR:
