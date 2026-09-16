@@ -64,7 +64,7 @@ class _StubYOLO:
 def _sample_det() -> Detection:
     return Detection.from_cxcywhr(
         frame=12,
-        class_id=1,
+        class_id=2,
         confidence=0.94,
         center_x=160.0,
         center_y=230.0,
@@ -80,7 +80,7 @@ def _stub_one_car() -> _StubYOLO:
         dtype=np.float64,
     )
     return _StubYOLO(
-        _FakeOBB(xyxyxyxy=corners, conf=np.array([0.94]), cls=np.array([1]))
+        _FakeOBB(xyxyxyxy=corners, conf=np.array([0.94]), cls=np.array([2]))
     )
 
 
@@ -141,7 +141,7 @@ def test_write_detections_json_matches_fr_det_fields(tmp_path: Path) -> None:
     row = payload["detections"][0]
     assert set(row) == FR_DET_KEYS
     assert row["frame"] == 12
-    assert row["class_id"] == 1
+    assert row["class_id"] == 2
     assert row["class"] == "car"
     assert row["confidence"] == pytest.approx(0.94)
     assert row["center_x"] == pytest.approx(160.0)

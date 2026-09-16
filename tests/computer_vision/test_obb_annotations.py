@@ -18,9 +18,9 @@ from adapters.drift.obb_annotations import (
 
 def test_parse_obb_label_line() -> None:
     """A valid 9-field OBB line becomes an OBBBox with class car and 8 corners."""
-    line = "1 0.1 0.2 0.3 0.2 0.3 0.4 0.1 0.4"
+    line = "2 0.1 0.2 0.3 0.2 0.3 0.4 0.1 0.4"
     box = parse_obb_label_line(line)
-    assert box.class_id == 1
+    assert box.class_id == 2
     assert box.class_name == "car"
     assert len(box.corners) == 8
 
@@ -59,7 +59,7 @@ def test_dataset_adapter_and_yaml(tmp_path: Path) -> None:
     ds.write_ultralytics_data_yaml(out)
     payload = yaml.safe_load(out.read_text(encoding="utf-8"))
     assert payload["train"] == "train/images"
-    assert payload["names"][1] == "car"
+    assert payload["names"][2] == "car"
 
 
 def _write_github_model_tree(root: Path, *, nest_under_model: bool = False) -> Path:
@@ -78,7 +78,7 @@ def _write_github_model_tree(root: Path, *, nest_under_model: bool = False) -> P
         (labels / f"{stem}.txt").write_text(
             f"{class_id} 0.1 0.2 0.3 0.2 0.3 0.4 0.1 0.4\n", encoding="utf-8"
         )
-    (model / "data.yaml").write_text("names: {0: bus}\n", encoding="utf-8")
+    (model / "data.yaml").write_text("names: {0: bike}\n", encoding="utf-8")
     return model
 
 

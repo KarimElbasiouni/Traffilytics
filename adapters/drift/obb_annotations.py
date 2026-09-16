@@ -14,7 +14,17 @@ from typing import Iterator
 
 import yaml
 
-CLASS_NAMES = {0: "bus", 1: "car", 2: "truck"}
+# Mirrors computer_vision.detection.types.CLASS_NAMES. Duplicated deliberately:
+# computer_vision.detection imports this module, so importing it back here would
+# be a circular import. test_detection asserts the two maps stay identical.
+CLASS_NAMES = {
+    0: "bike",
+    1: "bus",
+    2: "car",
+    3: "other_vehicle",
+    4: "taxi",
+    5: "truck",
+}
 
 # Full GitHub model/{train,valid,test} tree (paper: 2,301 frames / 292,570 instances).
 # Do not commit this set; do not fetch it in CI or pytest.
@@ -34,7 +44,7 @@ class OBBBox:
 
     @property
     def class_name(self) -> str:
-        """Human-readable class label (bus / car / truck), or the raw id if unknown."""
+        """Human-readable vehicle class label, or the raw id if unknown."""
         return CLASS_NAMES.get(self.class_id, str(self.class_id))
 
 

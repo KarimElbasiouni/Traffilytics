@@ -98,7 +98,7 @@ def test_detection_json_matches_fr_det_fields() -> None:
     """to_dict keys and class/confidence match the FR-DET example object."""
     det = Detection.from_cxcywhr(
         frame=1204,
-        class_id=1,
+        class_id=2,
         confidence=0.94,
         center_x=160.0,
         center_y=230.0,
@@ -109,7 +109,7 @@ def test_detection_json_matches_fr_det_fields() -> None:
     payload = det.to_dict()
     assert set(payload) == FR_DET_KEYS
     assert payload["frame"] == 1204
-    assert payload["class_id"] == 1
+    assert payload["class_id"] == 2
     assert payload["class"] == "car"
     assert payload["confidence"] == pytest.approx(0.94)
     assert payload["center_x"] == pytest.approx(160.0)
@@ -122,13 +122,30 @@ def test_detection_json_matches_fr_det_fields() -> None:
 
 
 def test_detection_class_names() -> None:
-    """class_id 0/1/2 map to bus/car/truck; unknown ids stringify."""
+    """UAV-OBB class ids 0-5 map to their labels; unknown ids stringify."""
     corners = cxcywhr_to_corners(1.0, 1.0, 2.0, 1.0, 0.0)
-    assert Detection(0, 0, 0.5, corners).class_name == "bus"
-    assert Detection(0, 1, 0.5, corners).class_name == "car"
-    assert Detection(0, 2, 0.5, corners).class_name == "truck"
+    assert Detection(0, 0, 0.5, corners).class_name == "bike"
+    assert Detection(0, 1, 0.5, corners).class_name == "bus"
+    assert Detection(0, 2, 0.5, corners).class_name == "car"
+    assert Detection(0, 3, 0.5, corners).class_name == "other_vehicle"
+    assert Detection(0, 4, 0.5, corners).class_name == "taxi"
+    assert Detection(0, 5, 0.5, corners).class_name == "truck"
     assert Detection(0, 9, 0.5, corners).class_name == "9"
-    assert CLASS_NAMES == {0: "bus", 1: "car", 2: "truck"}
+    assert CLASS_NAMES == {
+        0: "bike",
+        1: "bus",
+        2: "car",
+        3: "other_vehicle",
+        4: "taxi",
+        5: "truck",
+    }
+
+
+def test_adapter_class_names_match_core() -> None:
+    """The dataset adapter keeps its own copy; it must not diverge from the core map."""
+    from adapters.drift.obb_annotations import CLASS_NAMES as ADAPTER_CLASS_NAMES
+
+    assert ADAPTER_CLASS_NAMES == CLASS_NAMES
 
 
 def test_detection_confidence_bounds() -> None:
@@ -155,7 +172,7 @@ def test_detection_from_dict_round_trip() -> None:
     restored = Detection.from_dict(det.to_dict())
     assert restored.frame == det.frame
     assert restored.class_id == det.class_id
-    assert restored.class_name == "bus"
+    assert restored.class_name == "bike"
     np.testing.assert_allclose(restored.as_cxcywhr(), det.as_cxcywhr(), atol=1e-9)
 
 
@@ -172,7 +189,7 @@ def test_detection_from_dict_cxcywhr_only() -> None:
         "angle": 0.0,
     }
     det = Detection.from_dict(data)
-    assert det.class_name == "truck"
+    assert det.class_name == "car"
     assert det.center_x == pytest.approx(5.0)
     assert det.width == pytest.approx(10.0)
     assert det.height == pytest.approx(4.0)
@@ -236,7 +253,7 @@ class _StubYOLO:
 
 
 def _sample_corners() -> np.ndarray:
-    """Three pixel rectangles, one per class (bus / car / truck)."""
+    """Three pixel rectangles, one per class (bike / bus / car)."""
     return np.array(
         [
             [[10.0, 10.0], [30.0, 10.0], [30.0, 24.0], [10.0, 24.0]],
@@ -272,11 +289,11 @@ def test_vehicle_detector_stub_returns_class_ids_and_confidence() -> None:
     detections = detector.detect_objects(frame, frame_index=1204)
 
     assert [d.class_id for d in detections] == [0, 1, 2]
-    assert [d.class_name for d in detections] == ["bus", "car", "truck"]
+    assert [d.class_name for d in detections] == ["bike", "bus", "car"]
     assert all(0.0 <= d.confidence <= 1.0 for d in detections)
     assert all(d.frame == 1204 for d in detections)
     payload = detections[1].to_dict()
-    assert payload["class"] == "car"
+    assert payload["class"] == "bus"
     assert payload["corners"][0] == [40.0, 40.0]
 
 

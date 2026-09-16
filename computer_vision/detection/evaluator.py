@@ -159,7 +159,7 @@ def _alias_map_keys(raw: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def _per_class_maps(raw: Mapping[str, Any], val_result: Any) -> dict[str, Any] | None:
-    """Map per-class AP values onto bus/car/truck names when Ultralytics provides them."""
+    """Map per-class AP values onto dataset class names when Ultralytics provides them."""
     maps = raw.get("maps")
     if maps is None:
         box = getattr(val_result, "box", None)
