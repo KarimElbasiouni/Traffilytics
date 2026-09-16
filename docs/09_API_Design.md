@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Traffilytics exposes a backend API (e.g., **FastAPI**) for processing, storage, and data access. DRIFT does not provide this API. Endpoints below may be refined during backend implementation.
+Traffilytics exposes a backend API (e.g., **FastAPI**) for uploads, processing, storage, and data access. Endpoints below may be refined during backend implementation.
 
 ## Conventions
 
@@ -10,9 +10,11 @@ Traffilytics exposes a backend API (e.g., **FastAPI**) for processing, storage, 
 |------|------------|
 | Style | REST/JSON |
 | Base path | `/api/v1` |
-| IDs | `video_id`, `track_id`, `event_id`, `site`, `model_version` |
-| Classes | `class_id`: `0` bus, `1` car, `2` truck |
-| Trajectories | Always **generated** unless an endpoint is explicitly under `/evaluation` |
+| IDs | `video_id`, `job_id`, `track_id`, `event_id`, `model_version` |
+| Classes | `class_id`: `0` bike, `1` bus, `2` car, `3` other_vehicle, `4` taxi, `5` truck |
+| Trajectories | Always **generated** by the platform |
+| Units | Analytics payloads carry a `units` field (`px` or `m`) |
+| Long work | Never inline; upload and process return a job to poll |
 | Errors | `{ "error": { "code": "...", "message": "..." } }` |
 
 ---
@@ -21,46 +23,63 @@ Traffilytics exposes a backend API (e.g., **FastAPI**) for processing, storage, 
 
 ### `POST /api/v1/videos`
 
-Register / upload a traffic video for processing.
+Upload a traffic video for processing. Accepts `multipart/form-data`. Returns immediately; decoding and inference happen in a worker.
 
-**Response `201`**
+**Response `202`**
 
 ```json
 {
-  "video_id": "site_03_clip_01",
-  "site": "03",
+  "video_id": "uav_clip_01",
+  "job_id": "job_7f21",
+  "site": "chongqing_arterial",
   "fps": 30,
-  "resolution": "3840x2160",
-  "duration": 900,
-  "source": "drift",
+  "resolution": "1920x1080",
+  "duration": 45,
+  "source": "upload",
   "status": "queued"
 }
 ```
 
 ### `GET /api/v1/videos`
 
-List clips; filter `?site=`
+List clips.
 
 ### `GET /api/v1/videos/{video_id}`
 
-Metadata, `model_version`, `tracker_name`, status.
+Metadata, `model_version`, `tracker_name`, `scale_m_per_px`, status.
 
 ### `POST /api/v1/videos/{video_id}/process`
 
-Run Traffilytics pipeline: detect (trained OBB) → track → generate trajectories → analytics → insights.
+Enqueue the Traffilytics pipeline: detect (trained OBB) → track → generate trajectories → analytics → insights. Returns a `job_id`.
 
 **Body (example)**
 
 ```json
 {
   "model_version": "obb_v1",
-  "tracker": "bytetrack"
+  "tracker": "bytetrack",
+  "scale_m_per_px": 0.062,
+  "lane_config": "configs/lanes/uav_clip_01.json"
 }
 ```
 
-### `GET /api/v1/sites`
+### `GET /api/v1/jobs/{job_id}`
 
-List known sites.
+Job status for an in-flight upload or process run.
+
+```json
+{
+  "job_id": "job_7f21",
+  "video_id": "uav_clip_01",
+  "stage": "tracking",
+  "progress": 0.42,
+  "status": "processing"
+}
+```
+
+### `PUT /api/v1/videos/{video_id}/lanes`
+
+Store or replace the lane/zone polygons for a scene.
 
 ---
 
@@ -68,28 +87,36 @@ List known sites.
 
 ### `POST /api/v1/models/train` (optional for MVP UI; required as CLI/job)
 
-Start / register OBB training on DRIFT annotation splits.
+Start / register OBB training on the UAV-OBB annotation splits.
 
 ### `GET /api/v1/models`
 
 List trained model versions available for inference.
 
-### `POST /api/v1/videos/{video_id}/evaluate`
+### `POST /api/v1/models/{model_version}/evaluate`
 
-Benchmark current (or specified) model/tracker outputs against DRIFT GT annotations/trajectories.
+Evaluate a model on held-out UAV-OBB labels.
 
 ```json
 {
   "eval_id": "eval_001",
-  "detection_metrics": {},
-  "tracking_metrics": {},
-  "trajectory_metrics": {}
+  "detection_metrics": {
+    "mAP50": 0.0,
+    "mAP50-95": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "per_class": {}
+  }
 }
 ```
 
+### `POST /api/v1/videos/{video_id}/tracking-diagnostics`
+
+Report ID-stability diagnostics for a processed clip (track counts, ID switches, fragmentation). No trajectory ground truth is assumed.
+
 ### `GET /api/v1/videos/{video_id}/evaluations`
 
-List evaluation runs for a clip.
+List evaluation runs associated with a clip.
 
 ---
 
@@ -97,7 +124,7 @@ List evaluation runs for a clip.
 
 ### `GET /api/v1/videos/{video_id}/detections`
 
-Paginated OBB detections from Traffilytics model.
+Paginated OBB detections from the Traffilytics model.
 
 ### `GET /api/v1/videos/{video_id}/vehicles`
 
@@ -110,13 +137,13 @@ Generated trajectory points (`?stride=` optional).
 ```json
 {
   "track_id": 52,
-  "class_id": 1,
+  "class_id": 2,
   "points": [
     {
       "frame": 1204,
       "center_x": 145,
       "center_y": 320,
-      "lane": 2,
+      "lane": "lane_2",
       "angle": 0.41,
       "confidence": 0.93
     }
@@ -142,6 +169,8 @@ Generated trajectory points (`?stride=` optional).
 
 ### `GET /api/v1/videos/{video_id}/overview`
 
+Speed and density fields are accompanied by `units`; clients must not present `px` values as physical measurements.
+
 ---
 
 ## 5. Events, Insights & Reports
@@ -162,13 +191,14 @@ Automated transportation analysis report payload.
 
 | Dashboard page | Primary endpoints |
 |----------------|-------------------|
+| Upload / Jobs | `POST /videos`, `/jobs/{job_id}` |
 | Overview | `/overview`, `/events` |
 | Traffic Flow | `/analytics/flow`, `/analytics/flow-density` |
 | Bottleneck | `/analytics/bottlenecks`, `/analytics/heatmap` |
-| Flow Imbalance | `/analytics/imbalance` |
+| Flow Imbalance | `/analytics/imbalance`, `PUT /videos/{id}/lanes` |
 | Events | `/events` |
 | Reports | `/insights`, `/reports` |
-| Eval (internal) | `/evaluate`, `/evaluations` |
+| Eval (internal) | `/models/{v}/evaluate`, `/evaluations` |
 
 ---
 
@@ -176,8 +206,9 @@ Automated transportation analysis report payload.
 
 | Service | Role |
 |---------|------|
-| Video service | Ingest, metadata, status |
-| ML service | Train OBB, register weights, evaluate vs DRIFT |
+| Video service | Upload, metadata, status |
+| Job service | Queue, worker dispatch, progress reporting |
+| ML service | Train OBB on UAV-OBB, register weights, evaluate |
 | Pipeline service | Detect → track → generate trajectories → analytics |
 | Analytics service | Flow, bottleneck, imbalance, events |
 | Insight / report service | Summaries and report payloads |

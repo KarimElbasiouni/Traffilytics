@@ -1,6 +1,6 @@
 # Component Design
 
-Traffilytics components are **platform-owned**. DRIFT supplies data, annotation format, and GT trajectories for training/evaluation—not the application implementation.
+Traffilytics components are **platform-owned**. UAV-OBB supplies training images, OBB labels, and the annotation format — not the application implementation.
 
 ---
 
@@ -12,15 +12,15 @@ Modular ingestion and preparation of traffic video for training and inference.
 
 ### Responsibilities (Traffilytics)
 
-- Load video files (prefer DRIFT stabilized clips when available)
-- Extract frames (OpenCV)
+- Load user-uploaded video files, plus UAV-OBB's bundled MP4 clips for demos
+- Extract frames (OpenCV), with configurable downscaling and frame stride
 - Normalize formats as needed
-- Store and manage metadata (`video_id`, `site`, fps, resolution, duration)
+- Store and manage metadata (`video_id`, `site` label, fps, resolution, duration)
 - Organize raw vs processed artifacts
 
 ### Not a focus
 
-- Reimplementing Stabilo / DRIFT stabilization R&D—reuse stabilized videos or their process if needed
+- Video stabilization. Clips are processed as supplied.
 
 ### Low-Level Design
 
@@ -30,7 +30,7 @@ Modular ingestion and preparation of traffic video for training and inference.
 |--------|-------------|
 | `load_video()` | Open and validate video source |
 | `extract_frames()` | Decode frames |
-| `get_metadata()` | Return site, fps, resolution, duration, ids |
+| `get_metadata()` | Return scene label, fps, resolution, duration, ids |
 | `save_frames()` / artifact paths | Persist intermediates as configured |
 
 ### Requirements
@@ -43,28 +43,33 @@ FR-VID-001 … FR-VID-006
 
 ### Purpose
 
-Train and run an OBB vehicle detector on DRIFT-format annotations.
+Train and run an OBB vehicle detector on UAV-OBB annotations.
 
 ### Technology
 
-- **Architecture:** YOLO OBB (e.g., YOLOv11 OBB family)—not reinvented
-- **Weights:** Traffilytics-trained on DRIFT annotations
-- **Baseline (optional):** Compare against DRIFT-provided `best.pt` during evaluation
+- **Architecture:** YOLO OBB (YOLOv8/YOLOv11 OBB family) — not reinvented
+- **Weights:** Traffilytics-trained on UAV-OBB splits
+- **Baseline (optional):** Compare against a public pretrained OBB checkpoint during evaluation, without adopting it as the product model
 
 ### Responsibilities
 
-- Dataset adapters for DRIFT OBB labels
-- Training loop / training entrypoint (PyTorch / Ultralytics-style tooling)
+- Dataset adapter for UAV-OBB OBB labels and `data.yaml`
+- Training loop / training entrypoint (PyTorch / Ultralytics tooling)
 - Inference producing OBB + `class_id` + confidence
-- Evaluation against held-out DRIFT annotations
+- Evaluation against held-out UAV-OBB annotations
 
 ### Supported Classes
 
+Read from the dataset `data.yaml` where practical; hard-coded maps must match it.
+
 | `class_id` | Label |
 |------------|-------|
-| 0 | Bus |
-| 1 | Car |
-| 2 | Truck |
+| 0 | bike |
+| 1 | bus |
+| 2 | car |
+| 3 | other_vehicle |
+| 4 | taxi |
+| 5 | truck |
 
 ### Low-Level Design
 
@@ -72,10 +77,10 @@ Train and run an OBB vehicle detector on DRIFT-format annotations.
 
 | Method | Description |
 |--------|-------------|
-| `train()` | Train OBB model on DRIFT splits |
+| `train()` | Train OBB model on UAV-OBB splits |
 | `load_model()` | Load Traffilytics weights |
 | `detect_objects()` | OBB inference on a frame |
-| `evaluate()` | Metrics vs DRIFT annotations |
+| `evaluate()` | Metrics vs held-out UAV-OBB annotations |
 
 ### Requirements
 
@@ -87,7 +92,7 @@ FR-DET-001 … FR-DET-006
 
 ### Purpose
 
-Independently integrate multi-object tracking and generate Traffilytics trajectories.
+Independently integrate multi-object tracking and generate Traffilytics trajectories. This component supplies the temporal dimension that the dataset lacks.
 
 ### Technology
 
@@ -99,23 +104,24 @@ Independently integrate multi-object tracking and generate Traffilytics trajecto
 - Associate OBB detections across frames
 - Assign `track_id`
 - Emit generated trajectory streams/files
-- Lane inference or utilization of lane cues for analytics/visualization
-- Benchmark generated trajectories against DRIFT GT CSVs
+- Resolve lane membership from user-defined lane polygons
+- Report tracking stability diagnostics (no trajectory ground truth exists)
 
 ### Explicit non-responsibility
 
-- Using DRIFT GT trajectory CSVs as the live trajectory source for analytics/dashboard
+- Producing or importing a ground-truth trajectory dataset
 
 ### Low-Level Design
 
-**Classes:** `VehicleTracker`, `TrajectoryGenerator`, `TrajectoryBenchmarker`
+**Classes:** `VehicleTracker`, `TrajectoryGenerator`, `LaneAssigner`, `TrackingDiagnostics`
 
 | Method | Description |
 |--------|-------------|
 | `initialize_tracker()` | Configure ByteTrack (or alternative) |
 | `update_tracks()` | Ingest frame detections |
 | `generate_trajectory()` | Export Traffilytics trajectories |
-| `benchmark_against_gt()` | Compare to DRIFT GT CSVs |
+| `assign_lane()` | Map a trajectory point to a configured lane polygon |
+| `track_stability_report()` | Track counts, ID switches, fragmentation, overlay video |
 
 ### Requirements
 
@@ -127,7 +133,7 @@ FR-TRK-001 … FR-TRK-006
 
 ### Purpose
 
-Platform-specific analytics designed for Traffilytics—not a packaging of DRIFT example scripts.
+Platform-specific analytics designed for Traffilytics.
 
 ### Feature modules
 
@@ -135,9 +141,13 @@ Platform-specific analytics designed for Traffilytics—not a packaging of DRIFT
 |--------|------------------------|
 | 4.1 Flow characterization | Own metrics/algorithms (volume, speed, density, state, flow–density) |
 | 4.2 Bottleneck detection | Own zone methodology and cause attribution |
-| 4.3 Flow imbalance | **Dedicated** lane utilization / imbalance feature |
+| 4.3 Flow imbalance | **Dedicated** lane utilization / imbalance feature over configured lane polygons |
 | 4.4 Event detection | Rule-based: sudden congestion, stopped vehicle, queue spillback |
 | 4.5 Optional micro | LC / TTC as platform features if prioritized |
+
+### Units
+
+Speed and density are computed in pixel space by default. When a per-video pixel-to-metre scale is configured, values are converted and labelled as physical units; otherwise they stay pixel-based and are labelled as such.
 
 ### Requirements
 
@@ -149,7 +159,7 @@ FR-FLOW-*, FR-BTN-*, FR-IMB-*, FR-EVT-*, FR-MIC-*
 
 ### Purpose
 
-Convert analytics into human-readable summaries (**not present in DRIFT**).
+Convert analytics into human-readable summaries.
 
 ### Low-Level Design
 
@@ -167,7 +177,7 @@ Convert analytics into human-readable summaries (**not present in DRIFT**).
 
 ### Purpose
 
-Persistent store for videos, **generated** trajectories, analytics, and events (**not provided by DRIFT**).
+Persistent store for videos, **generated** trajectories, analytics, and events.
 
 See [08_Database_Design.md](./08_Database_Design.md).
 
@@ -177,14 +187,15 @@ See [08_Database_Design.md](./08_Database_Design.md).
 
 ### Purpose
 
-Manage processing, storage, and data access (e.g., **FastAPI**).
+Manage uploads, processing, storage, and data access (e.g., **FastAPI**).
 
 ### Responsibilities
 
-- Register videos / jobs
-- Trigger process pipeline
+- Accept video uploads and register them
+- Enqueue processing jobs and return a job id without blocking
+- Expose job status and progress
 - Query trajectories, analytics, events, insights
-- Optionally expose train/eval job status and benchmark results
+- Expose training/evaluation job status and detector metrics
 
 ---
 
@@ -192,11 +203,12 @@ Manage processing, storage, and data access (e.g., **FastAPI**).
 
 ### Purpose
 
-Interactive web traffic intelligence UI and automated reports (**not in DRIFT**).
+Interactive web traffic intelligence UI and automated reports.
 
 | Page | Displays |
 |------|----------|
-| Overview | Totals, traffic state, site, major events |
+| Upload / Jobs | Upload a clip, watch job status |
+| Overview | Totals, traffic state, scene label, major events |
 | Traffic Flow | Volume, speed, congestion, flow–density |
 | Bottleneck | Heatmaps, locations, accumulation |
 | Flow Imbalance | Lane utilization |
@@ -208,19 +220,20 @@ Interactive web traffic intelligence UI and automated reports (**not in DRIFT**)
 ## Component Interaction
 
 ```
-User → Dashboard → FastAPI
-         → VideoProcessor
-         → VehicleDetector (trained OBB weights)
-         → VehicleTracker (ByteTrack)
-         → TrajectoryGenerator ──► DB
-         → (optional) TrajectoryBenchmarker vs DRIFT GT
-         → Analytics Engine → InsightGenerator ──► DB
+User → Dashboard → FastAPI  (upload returns job id)
+         → Worker job:
+             → VideoProcessor
+             → VehicleDetector (trained OBB weights)
+             → VehicleTracker (ByteTrack)
+             → TrajectoryGenerator + LaneAssigner ──► DB
+             → (optional) TrackingDiagnostics
+             → Analytics Engine → InsightGenerator ──► DB
 User ← Dashboard / Reports
 ```
 
 ### Training (offline / job)
 
 ```
-DRIFT annotations → DetectionTrainer → models/your_obb.pt
-                                      → DetectionEvaluator
+UAV-OBB splits → DetectionTrainer → models/your_obb.pt
+                                   → DetectionEvaluator → metrics + overlays
 ```
