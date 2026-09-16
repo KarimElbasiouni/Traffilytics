@@ -2,49 +2,49 @@
 
 ## Context
 
-Transportation researchers and traffic engineers need structured vehicle trajectories and multi-scale flow metrics from aerial video. Open datasets such as **DRIFT** provide high-quality 4K drone imagery, OBB annotations, and ground-truth trajectories for nine interconnected intersections in Daejeon—along with research scripts and a reference YOLOv11m + ByteTrack setup.
-
-That still leaves a gap: a **complete, modular traffic intelligence platform** that trains its own detector, runs its own tracking and trajectory generation, implements its own analytics and event logic, stores results, exposes APIs, and presents interactive dashboards and reports. DRIFT is a dataset and reference codebase; it is not a deployable product.
+Transportation researchers and traffic engineers need structured vehicle trajectories and multi-scale flow metrics from aerial video. Open datasets such as **UAV-OBB** supply exactly the hard part of the perception problem — tight, rotation-aware oriented bounding boxes over real urban roads, across day, night, rain, and fog, at multiple zoom levels — but a folder of annotated still images is not a system.
 
 ## The Problem
 
 There is no lightweight, end-to-end platform that:
 
 1. **Owns** video ingestion, preprocessing, frame extraction, and metadata management
-2. **Trains and evaluates** an OBB detector on DRIFT annotations (rather than only consuming a pre-shipped checkpoint as the product)
+2. **Trains and evaluates** an OBB detector on public aerial annotations (rather than only consuming someone else's checkpoint)
 3. **Integrates and evaluates** multi-object tracking and **generates** trajectories from that pipeline
 4. **Implements** custom analytics (flow, bottlenecks, imbalance, events) and automated insights
 5. **Persists** results and serves them through a backend API and interactive dashboard
 6. **Packages** the system as deployable software (e.g., Dockerized services)
 
-Relying on DRIFT’s provided trajectory CSVs as the live data path would skip the computer vision pipeline that the platform is meant to demonstrate. Those CSVs are for **validation and benchmarking**, not as a substitute for generated tracks.
+UAV-OBB sharpens the gap rather than closing it. The dataset has no trajectories, no lane topology, and no world-scale calibration — only per-image oriented boxes. Everything temporal and spatial has to be produced by the platform: tracking turns detections into trajectories, user-defined polygons turn pixels into lanes and zones, and an optional scale turns pixel motion into physical speed. That gap is precisely what Traffilytics builds.
 
 ## Who Is Affected
 
 | Stakeholder | Pain |
 |-------------|------|
-| Traffic / transportation engineers | Research repos don’t offer a unified dashboard + reports workflow |
-| Researchers & students | Hard to go from training on DRIFT → own trajectories → product-style analytics |
+| Traffic / transportation engineers | Detection datasets and research repos don’t offer a unified dashboard + reports workflow |
+| Researchers & students | Hard to go from a public OBB dataset → trained model → own trajectories → product-style analytics |
+| Anyone with drone footage | No simple way to upload a clip and get traffic metrics back |
 | Future operators | Need a modular platform pattern, not only notebook demos |
 
 ## Opportunity
 
-Use DRIFT as the primary **training and evaluation** dataset while building Traffilytics as the platform:
+Use UAV-OBB as the **training and evaluation** dataset while building Traffilytics as the platform:
 
-- Train a YOLO OBB model on DRIFT annotations; evaluate against held-out labels
+- Train a YOLO OBB model on UAV-OBB's six vehicle classes; evaluate against held-out labels
 - Integrate ByteTrack (and optionally compare OC-SORT / DeepSORT)
-- Generate trajectories; benchmark against DRIFT ground-truth CSVs
+- Generate trajectories, and assess their temporal stability on UAV-OBB's bundled video clips
 - Design analytics, events, insights, FastAPI backend, database, and dashboard independently
-- Reuse YOLO architecture, ByteTrack, OpenCV, and PyTorch rather than reinventing them
-- Reuse DRIFT stabilized videos / stabilization process without making Stabilo a project focus
+- Accept **user-uploaded** footage at runtime, so the platform is not welded to one dataset
+- Reuse YOLO, ByteTrack, OpenCV, and PyTorch rather than reinventing them
 
 ## Success Criteria (Problem Solved When)
 
-- Footage flows through Traffilytics’ own ingest → detect → track → trajectory pipeline
-- Detector and tracker performance can be evaluated using DRIFT annotations / GT trajectories
+- Uploaded footage flows through Traffilytics’ own ingest → detect → track → trajectory pipeline
+- Detector accuracy is measurable on held-out UAV-OBB labels, and tracking stability is reviewable on video
 - Custom analytics, bottlenecks, imbalance, events, and insights are available via API and dashboard
-- The system is structured as a modular, deployable platform—not a fork of DRIFT’s research repo
+- Derived metrics state their units honestly, using pixel-based units when no scale is supplied
+- The system is structured as a modular, deployable platform
 
 ## Out of Scope for This Problem
 
-Solving this problem does **not** require controlling signals, recommending infrastructure projects, predicting long-term urban growth, providing emergency dispatch, inventing a new detector/tracker architecture, or centering R&D on video stabilization.
+Solving this problem does **not** require controlling signals, recommending infrastructure projects, predicting long-term urban growth, providing emergency dispatch, inventing a new detector/tracker architecture, curating a ground-truth trajectory dataset, or centering R&D on video stabilization.

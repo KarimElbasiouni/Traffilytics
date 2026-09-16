@@ -1,16 +1,16 @@
 # Future Work
 
-Work beyond the MVP, consistent with Traffilytics as a **full platform** and DRIFT as **training/evaluation data**.
+Work beyond the MVP, consistent with Traffilytics as a **full platform** and UAV-OBB as **training/evaluation data**.
 
 ---
 
 ## 1. Platform Expansion
 
-- Additional datasets beyond DRIFT (with separate adapters)
+- Additional OBB datasets beyond UAV-OBB (with separate adapters)
 - Live or near-live camera/drone streams
 - Continuous sliding-window analytics
-- Multi-site corridor dashboards across all DRIFT intersections
-- Geo-aligned / orthophoto map overlays when calibration data is used
+- Multi-clip corridor dashboards
+- Geo-aligned / orthophoto map overlays once calibration data is available
 
 ---
 
@@ -26,7 +26,9 @@ Work beyond the MVP, consistent with Traffilytics as a **full platform** and DRI
 
 - First-class LC / TTC product views
 - Richer interactive flow–density and time–space exploration
-- OD / turning movement estimates across connected sites
+- Automatic lane detection to replace manual polygon configuration
+- Camera calibration workflow for reliable physical-unit speeds
+- OD / turning movement estimates
 - Signal-phase observation (not control)
 - External context fusion (weather, incidents)
 
@@ -34,9 +36,11 @@ Work beyond the MVP, consistent with Traffilytics as a **full platform** and DRI
 
 ## 4. Model & Tracking Hardening
 
-- Larger training sweeps and ablation on DRIFT splits
+- Larger training sweeps and ablation on UAV-OBB splits
+- Class-imbalance handling for the rarer classes (bike, other_vehicle, taxi)
 - Systematic ByteTrack vs OC-SORT vs DeepSORT comparison reports
-- Domain adaptation (night, rain, glare, occlusion)
+- Domain adaptation beyond the dataset's cities and conditions (glare, heavy occlusion, unseen viewpoints)
+- Own annotated trajectory subset to enable true MOTA/IDF1 benchmarking
 - GPU workers, batching, multi-clip queues
 
 ---
@@ -44,6 +48,7 @@ Work beyond the MVP, consistent with Traffilytics as a **full platform** and DRI
 ## 5. Product & Deployment
 
 - Auth, roles, multi-tenant spaces
+- Upload quotas, retention policies, and deletion for user video
 - Export (CSV, GeoJSON, PDF)
 - Alert webhooks (not emergency dispatch)
 - Production-grade Docker/K8s packaging, observability, audit logs
@@ -52,9 +57,9 @@ Work beyond the MVP, consistent with Traffilytics as a **full platform** and DRI
 
 ## 6. Evaluation & Research
 
-- Public reporting of Traffilytics detector/tracker metrics on DRIFT
+- Public reporting of Traffilytics detector/tracker metrics on UAV-OBB
 - Human-in-the-loop correction UI
-- Papers/blogs that clearly credit DRIFT as dataset/reference, Traffilytics as platform
+- Papers/blogs that credit UAV-OBB as the dataset and Traffilytics as the platform
 
 ---
 
@@ -68,7 +73,7 @@ Work beyond the MVP, consistent with Traffilytics as a **full platform** and DRI
 - Autonomous driving
 - Inventing new detector/tracker architectures
 - Making video stabilization a core R&D pillar
-- Using DRIFT GT trajectory CSVs as the live product data path
+- Reporting physical-unit metrics for uncalibrated video
 
 ---
 
@@ -76,15 +81,16 @@ Work beyond the MVP, consistent with Traffilytics as a **full platform** and DRI
 
 | Priority | Theme |
 |----------|--------|
-| Near-term after MVP | Multi-site coverage, tracker comparison write-up, dashboard polish, Docker hardening |
-| Medium-term | LLM insights, exports/alerts, deeper micro analytics |
+| Near-term after MVP | Tracker comparison write-up, dashboard polish, lane editor UX, Docker hardening |
+| Medium-term | LLM insights, exports/alerts, deeper micro analytics, calibration workflow |
 | Long-term | Live feeds, multi-dataset adapters, geo maps, production multi-tenant ops |
 
 ---
 
 ## References
 
-- DRIFT dataset: https://huggingface.co/datasets/Hj-Lee/The-DRIFT  
-- DRIFT GitHub (reference): https://github.com/AIxMobility/The-DRIFT  
-- DRIFT paper: https://arxiv.org/abs/2504.11019  
-- Stabilo (if used): https://github.com/rfonod/stabilo  
+- UAV-OBB dataset: https://data.mendeley.com/datasets/6snrjwcpkh/3
+- UAV-OBB Kaggle mirror: https://www.kaggle.com/datasets/mdferozahmedafm/uav-obb-drone-based-urban-vehicle-dataset
+- UAV-OBB paper (Data in Brief): https://doi.org/10.1016/j.dib.2026.112710
+- Ultralytics YOLO (AGPL-3.0): https://github.com/ultralytics/ultralytics
+- ByteTrack: https://github.com/ifzhang/ByteTrack

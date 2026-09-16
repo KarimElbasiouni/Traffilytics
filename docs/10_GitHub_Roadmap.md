@@ -5,15 +5,16 @@
 ```
 traffilytics/
 ├── data/
-│   ├── raw/                  # DRIFT videos
-│   ├── annotations/          # DRIFT OBB labels / splits
-│   ├── gt_trajectories/      # DRIFT GT CSVs (eval only)
+│   ├── raw/                  # uploaded / demo videos
+│   ├── datasets/UAV-OBB/     # train, valid, test, data.yaml, test_videos_mp4
 │   └── processed/
+├── adapters/
+│   └── uav_obb/              # label loaders, class map, data.yaml handling
 ├── computer_vision/
 │   ├── preprocessing/        # Traffilytics ingest, frames, metadata
 │   ├── detection/            # Train + infer YOLO OBB
 │   ├── tracking/             # ByteTrack (+ optional alternatives)
-│   └── trajectories/         # Generation + GT benchmarking
+│   └── trajectories/         # Generation, lane assignment, diagnostics
 ├── analytics/
 │   ├── traffic_flow/
 │   ├── bottleneck/
@@ -24,17 +25,19 @@ traffilytics/
 ├── backend/
 │   ├── api/                  # FastAPI
 │   ├── database/
-│   └── services/
+│   └── services/             # jobs / workers
 ├── frontend/
 │   ├── dashboard/
 │   └── components/
+├── configs/
+│   └── lanes/                # per-video lane/zone polygons
 ├── models/                   # configs + trained weights
 ├── tests/
 ├── docker/                   # Dockerfiles / compose
 └── docs/
 ```
 
-DRIFT upstream ([AIxMobility/The-DRIFT](https://github.com/AIxMobility/The-DRIFT)) is an **external dataset/reference**, not this app’s root.
+UAV-OBB is an **external dataset** downloaded into `data/datasets/`; it is not committed to the repository.
 
 ---
 
@@ -44,10 +47,10 @@ DRIFT upstream ([AIxMobility/The-DRIFT](https://github.com/AIxMobility/The-DRIFT
 
 | Issue | Description |
 |-------|-------------|
-| DRIFT access & layout | HF/local paths for videos, annotations, GT CSVs |
+| UAV-OBB access & layout | Download helper + expected `train/valid/test` + `data.yaml` layout |
 | Modular video ingestion | Traffilytics OpenCV-based load, frames, metadata |
-| Artifact management | raw / annotations / gt_trajectories / processed |
-| Stabilized input policy | Prefer DRIFT stabilized videos; no Stabilo R&D focus |
+| Artifact management | raw / datasets / processed separation |
+| Input policy | Accept video as supplied; no stabilization R&D |
 
 **Deliverables:** Clips loadable through Traffilytics preprocessing with stored metadata.
 
@@ -57,10 +60,11 @@ DRIFT upstream ([AIxMobility/The-DRIFT](https://github.com/AIxMobility/The-DRIFT
 
 | Issue | Description |
 |-------|-------------|
-| Annotation adapter | DRIFT OBB format → training dataset |
-| Train YOLO OBB | Train **your** model on DRIFT splits (PyTorch/YOLO tooling) |
-| Evaluate detector | Metrics + overlays vs held-out annotations |
-| Optional baseline | Compare to DRIFT `best.pt` without adopting it as the product model |
+| Annotation adapter | UAV-OBB YOLO-OBB labels + `data.yaml` → training dataset |
+| Six-class map | Align `CLASS_NAMES` with `0 bike … 5 truck` |
+| Train YOLO OBB | Train **your** model on UAV-OBB splits (PyTorch/Ultralytics) |
+| Evaluate detector | mAP50, mAP50-95, precision, recall, per-class + overlays |
+| Optional baseline | Compare to a public pretrained OBB checkpoint without adopting it as the product model |
 
 **Deliverables:** Trained weights in `models/` + evaluation report.
 
@@ -73,10 +77,10 @@ DRIFT upstream ([AIxMobility/The-DRIFT](https://github.com/AIxMobility/The-DRIFT
 | Integrate ByteTrack | Independent integration into Traffilytics pipeline |
 | Optional tracker comparison | OC-SORT / DeepSORT evaluation |
 | Generate trajectories | From your detections + tracks |
-| Benchmark vs GT | Compare to DRIFT trajectory CSVs (validation only) |
-| Lane utilization hooks | Infer or attach lane info for analytics/viz |
+| Lane polygons + assigner | Per-video lane/zone config and point-in-polygon assignment |
+| Tracking diagnostics | Track counts, ID switches, fragmentation, overlay video on UAV-OBB clips |
 
-**Deliverables:** Generated trajectories + benchmark notes.
+**Deliverables:** Generated trajectories + tracking stability notes.
 
 ---
 
@@ -85,8 +89,9 @@ DRIFT upstream ([AIxMobility/The-DRIFT](https://github.com/AIxMobility/The-DRIFT
 | Issue | Description |
 |-------|-------------|
 | Flow characterization | Own volume/speed/density/state + flow–density |
+| Scale & units | Optional pixel-to-metre scale; label pixel-based outputs |
 | Bottleneck detection | Own zone methodology |
-| Flow imbalance module | Dedicated lane imbalance feature |
+| Flow imbalance module | Dedicated lane imbalance feature over configured lanes |
 | Event detection | Rule-based stopped / sudden congestion / spillback |
 | Insights | Template-based automated summaries |
 
@@ -99,8 +104,10 @@ DRIFT upstream ([AIxMobility/The-DRIFT](https://github.com/AIxMobility/The-DRIFT
 | Issue | Description |
 |-------|-------------|
 | Database schema | Videos, vehicles, trajectories, analytics, events, eval runs |
+| Upload + job queue | Accept uploads, enqueue work, report progress; no blocking requests |
 | FastAPI services | Jobs, query APIs, process triggers |
-| Dashboard | Overview, Flow, Bottleneck, Imbalance, Events, Reports |
+| Dashboard | Upload/Jobs, Overview, Flow, Bottleneck, Imbalance, Events, Reports |
+| Lane editor or config loader | Supply lane polygons per video |
 | Automated reports | Transportation analysis summaries |
 
 **Deliverables:** End-to-end API + UI on stored platform outputs.
@@ -112,9 +119,10 @@ DRIFT upstream ([AIxMobility/The-DRIFT](https://github.com/AIxMobility/The-DRIFT
 | Issue | Description |
 |-------|-------------|
 | Dockerize services | API, worker, DB, frontend as modular deployables |
-| Detection/tracking tests | Eval harnesses against DRIFT |
+| Detection/tracking tests | CPU-only harnesses; no dataset download in CI |
 | Analytics tests | Scenario checks |
 | Performance baselines | Runtime per clip; train notes |
+| Licence compliance | Document Ultralytics AGPL-3.0 obligations and UAV-OBB attribution |
 
 **Deliverables:** Deployable compose stack + test/benchmark docs.
 
@@ -123,26 +131,28 @@ DRIFT upstream ([AIxMobility/The-DRIFT](https://github.com/AIxMobility/The-DRIFT
 ## Suggested Sequencing
 
 ```
-Epic 1 (Video pipeline + DRIFT data layout)
+Epic 1 (Video pipeline + UAV-OBB layout)
   → Epic 2 (Train/eval OBB)
-    → Epic 3 (Track + generate trajectories + GT benchmark)
+    → Epic 3 (Track + generate trajectories + lanes + diagnostics)
       → Epic 4 (Analytics + insights)
-        → Epic 5 (FastAPI + DB + Dashboard + reports)
+        → Epic 5 (FastAPI + DB + upload/jobs + Dashboard + reports)
           → Epic 6 (Docker + tests)
 ```
 
-Do **not** sequence the product around “CSV ingest as the live path.” GT CSVs enter at Epic 3 as **benchmark inputs** only.
+Detector training is an offline GPU step and can run on a free hosted GPU; the rest of the roadmap is CPU-friendly.
 
 ---
 
 ## MVP Checklist
 
-- [ ] Traffilytics video ingestion/preprocessing works on DRIFT footage
-- [ ] YOLO OBB model trained on DRIFT annotations and evaluated
+- [ ] Traffilytics video ingestion/preprocessing works on uploaded footage
+- [ ] YOLO OBB model trained on UAV-OBB annotations and evaluated
 - [ ] Tracker integrated; trajectories **generated** by the platform
-- [ ] Generated trajectories benchmarked against DRIFT GT (as available)
+- [ ] Tracking stability reviewed on UAV-OBB video clips
+- [ ] Lane/zone polygons configurable per video
 - [ ] Custom flow, bottleneck, imbalance, and event analytics implemented
 - [ ] Automated insights generated
+- [ ] Upload → job → results flow works without blocking requests
 - [ ] Results in DB, exposed via FastAPI, visible on dashboard
 - [ ] Reports available; app layout Docker-ready
 
@@ -153,14 +163,14 @@ Do **not** sequence the product around “CSV ingest as the live path.” GT CSV
 | Label | Use |
 |-------|-----|
 | `epic-1` … `epic-6` | Epic membership |
-| `drift-data` | Dataset/annotation/GT access |
+| `dataset` | UAV-OBB access / annotation adapters |
 | `cv-train` / `cv-track` | Detection training / tracking |
 | `analytics` / `backend` / `frontend` / `devops` | Area |
 | `mvp` | Required for MVP |
-| `benchmark` | GT comparison work |
+| `evaluation` | Detector metrics and tracking diagnostics |
 
 ---
 
 ## Attribution
 
-Cite DRIFT ([arXiv:2504.11019](https://arxiv.org/abs/2504.11019)) when publishing. Acknowledge Stabilo only if its stabilization code is used.
+UAV-OBB is CC BY 4.0 — cite Ahmad, Fengjun, Bibi & Slaman Pathan (2026), Mendeley Data V3, [doi:10.17632/6snrjwcpkh.3](https://doi.org/10.17632/6snrjwcpkh.3), and state any modifications. Ultralytics is AGPL-3.0; the project licence must be compatible.

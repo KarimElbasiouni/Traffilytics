@@ -8,40 +8,39 @@
 
 Traffilytics is a complete traffic intelligence platform: modular video ingestion, a trained OBB detector, multi-object tracking, trajectory generation, a custom analytics engine, persistent storage, APIs, automated insights, and an interactive web dashboard.
 
-The **[DRIFT open dataset](https://huggingface.co/datasets/Hj-Lee/The-DRIFT)** is the primary **training and evaluation** dataset—annotated 4K drone footage and ground-truth trajectories over nine interconnected urban intersections in Daejeon, South Korea. DRIFT’s repository is a dataset and reference implementation; Traffilytics is the product platform built around that data, not a thin wrapper of DRIFT scripts.
+The **[UAV-OBB open dataset](https://data.mendeley.com/datasets/6snrjwcpkh/3)** is the primary **training and evaluation** dataset — 1920×1080 nadir UAV imagery over urban roads in Chongqing and Wuhan, annotated with oriented bounding boxes across six vehicle classes. At runtime the platform processes **video the user uploads**.
 
-## DRIFT vs Traffilytics
+UAV-OBB is a detection dataset and nothing more: still images and rotated boxes. Traffilytics supplies everything the dataset does not — identity across frames, trajectories, lane context, analytics, storage, APIs, and a dashboard.
 
-| Component | DRIFT Repository | Traffilytics |
-|-----------|------------------|--------------|
-| Dataset | Annotated drone footage and trajectory data | Use DRIFT as primary training and evaluation dataset |
-| Video processing | Basic preprocessing / frame extraction / stabilization scripts | Own modular ingestion, preprocessing, frame extraction, metadata management |
-| Stabilization | Stabilo-based scripts | Reuse DRIFT stabilized videos or their process (**not a project focus**) |
-| Object detection | Pre-trained YOLOv11m OBB (`best.pt`) | **Train and evaluate** your own YOLO OBB model on DRIFT annotations |
-| Bounding boxes | Polygon-based OBB format | Train/deploy OBB detector using the same annotation format |
-| Tracking | ByteTrack integration | Independently integrate and evaluate ByteTrack (or OC-SORT / DeepSORT) |
-| Trajectories | Generated after their detect/track; GT CSVs provided | **Generate your own** from your detector + tracker |
-| Trajectory CSVs | Ground-truth tracks | **Validation and benchmarking only** |
-| Lane assignment | Included in dataset | Infer or utilize for analytics and visualization |
-| Analytics | Example scripts (TTC, LC, congestion, flow–density, …) | Own analytics engine tailored to platform requirements |
-| Flow / bottleneck / imbalance / events | Research examples or limited | Independently design and implement (imbalance as a dedicated module) |
-| Insights | Not included | Automated human-readable summaries |
-| Dashboard / API / DB / reports | Not provided | Full web dashboard, backend (e.g. FastAPI), analytics DB, automated reports |
-| Deployment | Research codebase | Modular, deployable platform (e.g. Dockerized services) |
+## Dataset vs Platform
+
+| Concern | UAV-OBB (dataset) | Traffilytics (platform) |
+|---------|-------------------|-------------------------|
+| Imagery | Nadir UAV stills at 1920×1080, plus a few supplementary MP4 clips | Own modular ingestion, preprocessing, frame extraction, metadata for user-uploaded video |
+| Annotations | YOLOv8-OBB corner labels, six vehicle classes | **Trains and evaluates** its own YOLO OBB weights on them |
+| Detection model | None shipped | Traffilytics-trained OBB weights are the product model |
+| Tracking | None | Independently integrate and evaluate ByteTrack (or OC-SORT / DeepSORT) |
+| Trajectories | None | **Generated** from own detector + tracker |
+| Lane topology | None | User-defined lane/zone polygons per video |
+| World scale | None | Optional pixel-to-metre scale; pixel-based units when absent |
+| Analytics | None | Own engine: flow, density, bottleneck, imbalance, events |
+| Insights | None | Automated human-readable summaries |
+| Dashboard / API / DB / reports | None | Full web dashboard, backend (e.g. FastAPI), analytics DB, automated reports |
+| Deployment | Not applicable | Modular, deployable platform (e.g. Dockerized services) |
 
 ### What you are not reinventing
 
 | Technology | Approach | Why |
 |------------|----------|-----|
-| YOLO architecture | Use existing YOLO; **train your own** OBB weights | Shows a real CV pipeline without inventing a new detector |
+| YOLO architecture | Use existing YOLO OBB; **train your own** weights | Shows a real CV pipeline without inventing a new detector |
 | ByteTrack (or similar) | Integrate an existing tracker | Contribution is pipeline integration and evaluation |
 | OpenCV | Video processing | Standard CV library |
-| PyTorch | Model training | Industry-standard DL framework |
+| PyTorch / Ultralytics | Model training | Industry-standard tooling |
 
 ## Primary Goals
 
-1. Ingest and preprocess DRIFT (and compatible) traffic video with your own pipeline
-2. Train and evaluate a YOLO OBB detector on DRIFT annotations
+1. Ingest and preprocess user-uploaded aerial traffic video with your own pipeline
+2. Train and evaluate a YOLO OBB detector on UAV-OBB annotations
 3. Integrate and evaluate multi-object tracking (ByteTrack primary)
 4. Generate trajectories from **your** detector + tracker
 5. Implement a custom traffic analytics engine (flow, density, bottlenecks, imbalance, events)
@@ -61,18 +60,18 @@ The system will **not**:
 - Provide real-time emergency response
 - Perform autonomous driving functions
 - Treat video stabilization as a core R&D focus
-- Ship DRIFT’s provided trajectory CSVs as the production trajectory source
+- Produce or curate a ground-truth trajectory dataset
 
 ## MVP Definition
 
 The MVP is complete when a user can:
 
-1. Load DRIFT traffic footage through Traffilytics’ ingestion pipeline
-2. Run **your** trained OBB detector and tracker on that footage
-3. Obtain **generated** trajectories (benchmarked against DRIFT GT where useful)
+1. Upload aerial traffic footage and have Traffilytics ingest it
+2. Run **your** trained OBB detector and tracker on that footage as a background job
+3. Obtain **generated** trajectories with lane context from configured polygons
 4. See traffic metrics, bottlenecks, events, and automated insights
 5. Explore results on an interactive dashboard backed by API + database
 
 ## Final Project Statement
 
-Traffilytics demonstrates how a full software platform—detection, tracking, analytics, storage, APIs, and dashboard—can turn drone traffic video into actionable transportation insights. DRIFT supplies the data and annotation format; Traffilytics owns the end-to-end product implementation.
+Traffilytics demonstrates how a full software platform — detection, tracking, analytics, storage, APIs, and dashboard — can turn drone traffic video into actionable transportation insights. UAV-OBB supplies the training data and annotation format; Traffilytics owns the end-to-end product implementation.

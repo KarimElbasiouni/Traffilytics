@@ -1,6 +1,6 @@
 # Non-Functional Requirements
 
-Non-functional requirements for Traffilytics as a **complete, deployable traffic intelligence platform** that uses DRIFT for training and evaluation.
+Non-functional requirements for Traffilytics as a **complete, deployable traffic intelligence platform** that uses **UAV-OBB** for detector training and evaluation, and processes **user-uploaded video** at runtime.
 
 ---
 
@@ -9,10 +9,10 @@ Non-functional requirements for Traffilytics as a **complete, deployable traffic
 | ID | Requirement |
 |----|-------------|
 | NFR-PERF-001 | The pipeline shall process offline video batches; real-time emergency latency is out of scope. |
-| NFR-PERF-002 | Frame extraction and detection shall support DRIFT 4K sources with configurable downscaling for throughput. |
+| NFR-PERF-002 | Frame extraction and detection shall support HD through 4K sources with configurable downscaling and frame stride for throughput. |
 | NFR-PERF-003 | Tracking and analytics shall run on **generated** trajectories without interactive frame-by-frame user input. |
 | NFR-PERF-004 | Dashboard/API queries for summary metrics should return within interactive bounds for MVP clip sizes. |
-| NFR-PERF-005 | Training may be GPU-bound and offline; inference jobs should report progress/status via the backend. |
+| NFR-PERF-005 | Training may be GPU-bound and offline. Inference shall run as an asynchronous job that reports progress/status via the backend; no HTTP request shall block on video processing. |
 
 ---
 
@@ -20,7 +20,7 @@ Non-functional requirements for Traffilytics as a **complete, deployable traffic
 
 | ID | Requirement |
 |----|-------------|
-| NFR-SCALE-001 | Architecture shall support multiple DRIFT sites/clips as independent jobs. |
+| NFR-SCALE-001 | Architecture shall support multiple videos/clips as independent jobs. |
 | NFR-SCALE-002 | Storage shall handle high-volume generated trajectory time series (30 fps × many tracks). |
 | NFR-SCALE-003 | Services (API, worker/pipeline, DB, frontend) shall be separable for horizontal growth later. |
 
@@ -34,7 +34,8 @@ Non-functional requirements for Traffilytics as a **complete, deployable traffic
 | NFR-ACC-002 | Tracking shall preserve `track_id` sufficiently for analytics; tracker choice shall be evaluable. |
 | NFR-ACC-003 | Analytics outputs shall be reproducible for the same video, model weights, and configuration. |
 | NFR-ACC-004 | Failures (corrupt video, training error, model load error) shall fail gracefully with clear status/errors. |
-| NFR-ACC-005 | Generated trajectories shall be benchmarkable against DRIFT GT CSVs; GT shall not silently replace live outputs. |
+| NFR-ACC-005 | Trajectory and analytics outputs shall record the model weights and configuration that produced them, so every result is attributable to a specific run. |
+| NFR-ACC-006 | Where no pixel-to-metre scale is supplied, derived units (speed, density) shall be labelled as pixel-based rather than presented as physical measurements. |
 
 ---
 
@@ -44,7 +45,7 @@ Non-functional requirements for Traffilytics as a **complete, deployable traffic
 |----|-------------|
 | NFR-USE-001 | Dashboard shall present Overview, Flow, Bottleneck, Imbalance, Events, and Reports. |
 | NFR-USE-002 | Insights and reports shall be readable by non-CV specialists. |
-| NFR-USE-003 | Job status (ingest, train optional, process, complete/fail) shall be visible to technical users. |
+| NFR-USE-003 | Job status (upload, ingest, process, complete/fail) shall be visible to the user who submitted it. |
 
 ---
 
@@ -55,8 +56,8 @@ Non-functional requirements for Traffilytics as a **complete, deployable traffic
 | NFR-MAINT-001 | Video processing, detection, tracking, analytics, backend, and frontend shall be separable modules. |
 | NFR-MAINT-002 | Detector weights and tracker implementations shall be swappable behind clear interfaces. |
 | NFR-MAINT-003 | Insight generation shall start rule-based, with an extension point for LLM integration. |
-| NFR-MAINT-004 | DRIFT-specific dataset adapters (paths, annotation loaders, GT benchmark loaders) shall be isolated from core platform logic. |
-| NFR-MAINT-005 | Dependencies on DRIFT research scripts shall be minimized; prefer Traffilytics-owned implementations. |
+| NFR-MAINT-004 | Dataset-specific adapters (paths, annotation loaders, class maps) shall be isolated from core platform logic so another OBB dataset can be added without changing the CV core. |
+| NFR-MAINT-005 | Third-party research scripts shall not be vendored as product code; prefer Traffilytics-owned implementations. |
 
 ---
 
@@ -66,7 +67,7 @@ Non-functional requirements for Traffilytics as a **complete, deployable traffic
 |----|-------------|
 | NFR-PORT-001 | Training and inference shall run with PyTorch; GPU optional but recommended for YOLO OBB training. |
 | NFR-PORT-002 | Video I/O shall use standard libraries (e.g., OpenCV) for MP4 and frame extraction. |
-| NFR-PORT-003 | Configuration (dataset paths, thresholds, zones, model paths) shall be externalized. |
+| NFR-PORT-003 | Configuration (dataset paths, thresholds, lane/zone polygons, scale, model paths) shall be externalized. |
 | NFR-PORT-004 | Services shall be packageable with Docker (or equivalent) for reproducible deployment. |
 
 ---
@@ -75,9 +76,10 @@ Non-functional requirements for Traffilytics as a **complete, deployable traffic
 
 | ID | Requirement |
 |----|-------------|
-| NFR-SEC-001 | MVP uses open DRIFT data under its published terms; cite DRIFT when publishing results. |
+| NFR-SEC-001 | Training data shall be used under its published licence. UAV-OBB is CC BY 4.0: attribute the authors and state any modifications. |
 | NFR-SEC-002 | Local/demo API may be unauthenticated; production auth is future work. |
-| NFR-SEC-003 | Secrets (HF tokens, optional LLM keys) shall not be committed to source control. |
+| NFR-SEC-003 | Secrets (API keys, optional LLM keys) shall not be committed to source control. |
+| NFR-SEC-004 | User-uploaded video shall be treated as user data: stored only for processing and retrieval by that user, never redistributed or added to training data without consent. |
 
 ---
 
@@ -85,10 +87,11 @@ Non-functional requirements for Traffilytics as a **complete, deployable traffic
 
 | ID | Requirement |
 |----|-------------|
-| NFR-TEST-001 | Detector evaluation shall use DRIFT annotation splits / overlays. |
-| NFR-TEST-002 | Trajectory/tracking benchmarks shall compare generated tracks to DRIFT GT CSVs. |
+| NFR-TEST-001 | Detector evaluation shall use held-out UAV-OBB splits plus qualitative overlays. |
+| NFR-TEST-002 | Tracking shall be assessed with ID-stability diagnostics and visual review on video, including UAV-OBB's sparsely annotated reference clip; no trajectory ground-truth dataset is assumed. |
 | NFR-TEST-003 | Analytics shall be testable with known scenarios or synthetic trajectory subsets. |
 | NFR-TEST-004 | Performance benchmarks (runtime per video minute; train time) shall be measurable. |
+| NFR-TEST-005 | Automated tests shall run on CPU without GPU hardware or large dataset downloads. |
 
 ---
 
@@ -97,5 +100,6 @@ Non-functional requirements for Traffilytics as a **complete, deployable traffic
 | ID | Requirement |
 |----|-------------|
 | NFR-DOC-001 | Architecture, APIs, schema, and roadmap shall live under `docs/`. |
-| NFR-DOC-002 | Docs shall clearly separate DRIFT (dataset/reference) from Traffilytics (platform). |
-| NFR-DOC-003 | Acknowledge DRIFT authors; acknowledge Stabilo only if its code/process is used for stabilization. |
+| NFR-DOC-002 | Docs shall clearly separate UAV-OBB (training dataset) from Traffilytics (the platform). |
+| NFR-DOC-003 | UAV-OBB shall be cited per CC BY 4.0 in the repository and wherever its imagery is displayed in the product. |
+| NFR-DOC-004 | Third-party licence obligations of runtime dependencies (notably Ultralytics, AGPL-3.0) shall be documented and honoured by the project's own licence. |

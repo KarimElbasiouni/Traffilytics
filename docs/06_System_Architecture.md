@@ -2,19 +2,21 @@
 
 ## High-Level Pipeline
 
-Traffilytics is a full platform pipeline. DRIFT provides **training/evaluation data** and **GT trajectories for benchmarking**. Live trajectories always come from Traffilytics’ detector + tracker.
+Traffilytics is a full platform pipeline. **UAV-OBB** provides training/evaluation data for the detector. Runtime footage is **user-uploaded**, and trajectories always come from Traffilytics’ own detector + tracker.
 
 ```
-DRIFT Videos + Annotations (+ GT CSVs for eval only)
-        │
-        ▼
-┌───────────────────────────┐
-│  Video Processing Module  │  ← Traffilytics-owned
-│  ingest · frames · meta   │     (reuse stabilized video if available)
-└─────────────┬─────────────┘
-              ▼
-┌───────────────────────────┐
-│  YOLO OBB Detection       │  ← Train own weights on DRIFT;
+UAV-OBB images + OBB labels ──► (offline training) ──► models/your_obb.pt
+                                                            │
+User-uploaded video ────────────────────────────────────────┤
+        │                                                   │
+        ▼                                                   │
+┌───────────────────────────┐                               │
+│  Video Processing Module  │  ← Traffilytics-owned         │
+│  ingest · frames · meta   │                               │
+└─────────────┬─────────────┘                               │
+              ▼                                             │
+┌───────────────────────────┐                               │
+│  YOLO OBB Detection       │  ◄────────────────────────────┘
 │  (your trained model)     │     YOLO architecture reused
 └─────────────┬─────────────┘
               ▼
@@ -30,10 +32,10 @@ DRIFT Videos + Annotations (+ GT CSVs for eval only)
               ├──────────────────────┐
               ▼                      ▼
 ┌───────────────────────────┐  ┌─────────────────────┐
-│  Traffic Analytics Engine │  │  Benchmark vs DRIFT │
-│  flow · bottleneck ·      │  │  GT trajectory CSVs │
-│  imbalance · events ·     │  └─────────────────────┘
-│  (optional LC/TTC)        │
+│  Traffic Analytics Engine │  │  Tracking           │
+│  flow · bottleneck ·      │  │  diagnostics        │
+│  imbalance · events ·     │  │  (ID stability)     │
+│  (optional LC/TTC)        │  └─────────────────────┘
 └─────────────┬─────────────┘
               ▼
 ┌───────────────────────────┐
@@ -53,14 +55,17 @@ DRIFT Videos + Annotations (+ GT CSVs for eval only)
 └───────────────────────────┘
 ```
 
+Lane/zone polygons and the optional pixel-to-metre scale are configuration inputs to the analytics engine, supplied per video.
+
 ## Architectural Style
 
 | Aspect | Approach |
 |--------|----------|
-| Pattern | Modular pipeline + API-backed dashboard + optional worker jobs |
-| Dataset role | DRIFT for train/eval/benchmark—not the application itself |
+| Pattern | Modular pipeline + API-backed dashboard + asynchronous worker jobs |
+| Dataset role | UAV-OBB for train/eval — not the application itself |
+| Runtime input | User-uploaded video |
 | CV stack | Train YOLO OBB → integrate tracker → **generate** trajectories |
-| Analytics | Traffilytics-designed modules (not DRIFT notebook wrappers) |
+| Analytics | Traffilytics-designed modules |
 | Persistence | Dedicated analytics database |
 | API | Backend service (e.g. FastAPI) |
 | Presentation | Interactive web dashboard + automated reports |
@@ -69,15 +74,17 @@ DRIFT Videos + Annotations (+ GT CSVs for eval only)
 
 ## Data Flow Summary
 
-1. **Ingest** — Traffilytics video pipeline loads DRIFT clip; store metadata
-2. **Train (offline)** — Train YOLO OBB on DRIFT annotations; save platform weights
-3. **Detect** — Run trained OBB model on frames
-4. **Track** — ByteTrack (or evaluated alternative) assigns `track_id`s
-5. **Generate trajectories** — Persist Traffilytics trajectories
-6. **Benchmark (optional job)** — Compare to DRIFT GT CSVs
-7. **Analyze** — Flow, bottleneck, imbalance, events, optional micro metrics
+1. **Train (offline)** — Train YOLO OBB on UAV-OBB splits; evaluate; save platform weights
+2. **Upload** — User submits a video; API returns a job id immediately
+3. **Ingest** — Traffilytics video pipeline decodes the clip; store metadata
+4. **Detect** — Run trained OBB model on frames
+5. **Track** — ByteTrack (or evaluated alternative) assigns `track_id`s
+6. **Generate trajectories** — Persist Traffilytics trajectories
+7. **Analyze** — Flow, bottleneck, imbalance, events, optional micro metrics, over configured lanes/zones
 8. **Insights** — Rule-based summaries
 9. **Serve** — DB → FastAPI → dashboard / reports
+
+Steps 3–8 run in a worker, not inside the upload request. Job status is polled through the API.
 
 ## Logical Layers
 
@@ -93,7 +100,7 @@ DRIFT Videos + Annotations (+ GT CSVs for eval only)
 ├────────────────────────────────────────────┤
 │  Ingestion: Traffilytics video pipeline    │
 ├────────────────────────────────────────────┤
-│  Data: DRIFT media/annotations + App DB    │
+│  Data: UAV-OBB train set + uploads + App DB│
 └────────────────────────────────────────────┘
 ```
 
@@ -101,13 +108,14 @@ DRIFT Videos + Annotations (+ GT CSVs for eval only)
 
 | Concern | Traffilytics approach |
 |---------|----------------------|
-| Dataset | [Hj-Lee/The-DRIFT](https://huggingface.co/datasets/Hj-Lee/The-DRIFT) (train / eval / GT benchmark) |
+| Training dataset | [UAV-OBB](https://data.mendeley.com/datasets/6snrjwcpkh/3), CC BY 4.0 |
+| Runtime input | User-uploaded aerial video |
 | Detection | YOLO OBB architecture; **trained** weights |
 | Tracking | Integrate ByteTrack; optional OC-SORT / DeepSORT comparison |
 | Video I/O | OpenCV |
-| Training | PyTorch |
-| Stabilization | Reuse DRIFT stabilized assets; not a focus |
-| GT CSVs | Validation only |
+| Training | PyTorch / Ultralytics |
+| Lane & zone context | User-supplied polygons in configuration |
+| Units | Optional pixel-to-metre scale; pixel-based otherwise |
 | Backend | FastAPI (or equivalent) |
 | Deploy | Dockerized modular services |
 
@@ -115,25 +123,24 @@ DRIFT Videos + Annotations (+ GT CSVs for eval only)
 
 | Path | Role |
 |------|------|
-| `data/` | DRIFT downloads, annotations, GT CSVs (eval), processed artifacts |
+| `data/` | UAV-OBB splits, uploaded video, processed artifacts |
 | `computer_vision/` | Traffilytics preprocess, train, detect, track, trajectory gen |
 | `analytics/` | Flow, bottleneck, imbalance, events, insights |
+| `adapters/` | Dataset-specific loaders and class maps, isolated from the CV core |
 | `backend/` | FastAPI, database, services/workers |
 | `frontend/` | Dashboard |
 | `models/` | Training configs + exported weights |
-| `tests/` | Detection eval, trajectory benchmarks, analytics tests |
+| `tests/` | Detection eval, tracking diagnostics, analytics tests |
 | `docs/` | Platform documentation |
 | `docker/` (or compose) | Service packaging |
 
-DRIFT’s upstream repo remains an **external dataset/reference**; do not treat it as Traffilytics’ application root.
-
 ## Boundaries
 
-- **In:** Full platform on DRIFT video; train/eval with DRIFT annotations; benchmark with GT CSVs  
-- **Out:** Stabilization as core R&D; inventing new detector/tracker architectures; using GT CSVs as live trajectories; shipping DRIFT research UI as the product  
+- **In:** Full platform on user-uploaded video; train/eval with UAV-OBB annotations; tracking diagnostics on video
+- **Out:** Stabilization as core R&D; inventing new detector/tracker architectures; producing a trajectory ground-truth dataset; reporting physical units without a supplied scale
 
 ## Related Docs
 
-- [07_Component_Design.md](./07_Component_Design.md)  
-- [08_Database_Design.md](./08_Database_Design.md)  
-- [09_API_Design.md](./09_API_Design.md)  
+- [07_Component_Design.md](./07_Component_Design.md)
+- [08_Database_Design.md](./08_Database_Design.md)
+- [09_API_Design.md](./09_API_Design.md)
