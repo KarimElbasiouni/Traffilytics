@@ -12,8 +12,10 @@ video:
   prefer_stabilized: true
   extensions: [".mp4", ".avi", ".mov", ".mkv"]
   # Extract every Nth frame for throughput (NFR-PERF-002); set to 1 for all frames.
-  # Keep low for tracking: Epic 3 association degrades at sparse effective fps.
-  frame_stride: 5
+  # At a 30 fps source, stride 2 leaves ~15 effective fps, which keeps per-frame
+  # vehicle displacement small enough for IoU-based association. Larger strides
+  # process faster but degrade tracking (Epic 3). Override per run with --stride.
+  frame_stride: 2
   # Optional max frames for smoke / debug (null = no limit)
   max_frames: null
   # Image format for extracted frames

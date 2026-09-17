@@ -21,7 +21,6 @@ dependencies = [
   "python-dotenv>=1.0",
   "tqdm>=4.66",
   "pillow>=10.0",
-  "huggingface_hub>=0.20",
 ]
 
 [project.optional-dependencies]

@@ -18,7 +18,6 @@ dependencies:
   - pip:
       - opencv-python>=4.8
       - python-dotenv>=1.0
-      - huggingface_hub>=0.20
       # Later epics (CPU torch for import/smoke; use CUDA build on GPU hosts)
       - torch
       - torchvision
