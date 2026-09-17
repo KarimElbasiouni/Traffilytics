@@ -31,10 +31,10 @@ data/raw/*
 !data/raw/.gitkeep
 data/annotations/*
 !data/annotations/.gitkeep
-data/gt_trajectories/*
-!data/gt_trajectories/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
+data/*.zip
+data/.uav_obb_stage_*/
 data/*.db
 data/*.sqlite
 data/*.sqlite3

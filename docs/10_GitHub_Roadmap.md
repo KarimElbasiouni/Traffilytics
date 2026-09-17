@@ -5,11 +5,11 @@
 ```
 traffilytics/
 ├── data/
-│   ├── raw/                  # uploaded / demo videos
-│   ├── datasets/UAV-OBB/     # train, valid, test, data.yaml, test_videos_mp4
+│   ├── raw/                  # uploaded video + UAV-OBB demo clips
+│   ├── annotations/          # UAV-OBB train, valid, test, data.yaml
 │   └── processed/
 ├── adapters/
-│   └── uav_obb/              # label loaders, class map, data.yaml handling
+│   └── uav_obb/              # download/install, split discovery, data.yaml handling
 ├── computer_vision/
 │   ├── preprocessing/        # Traffilytics ingest, frames, metadata
 │   ├── detection/            # Train + infer YOLO OBB
@@ -37,7 +37,7 @@ traffilytics/
 └── docs/
 ```
 
-UAV-OBB is an **external dataset** downloaded into `data/datasets/`; it is not committed to the repository.
+UAV-OBB is an **external dataset** installed into `data/annotations/` (splits) and `data/raw/` (bundled demo clips) by `scripts/download_uav_obb.py`; it is not committed to the repository.
 
 ---
 
@@ -47,7 +47,7 @@ UAV-OBB is an **external dataset** downloaded into `data/datasets/`; it is not c
 
 | Issue | Description |
 |-------|-------------|
-| UAV-OBB access & layout | Download helper + expected `train/valid/test` + `data.yaml` layout |
+| UAV-OBB access & layout | `scripts/download_uav_obb.py` (Mendeley, checksum-verified) → `train/valid/test` + `data.yaml` |
 | Modular video ingestion | Traffilytics OpenCV-based load, frames, metadata |
 | Artifact management | raw / datasets / processed separation |
 | Input policy | Accept video as supplied; no stabilization R&D |

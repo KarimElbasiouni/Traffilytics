@@ -16,8 +16,7 @@ from adapters.uav_obb.layout import DatasetLayout
 
 _LAYOUT_HINT = (
     "Expected train/{images,labels} and valid/{images,labels} under the "
-    "annotations root. Download UAV-OBB and extract its train/valid/test "
-    "folders there."
+    "annotations root. Run scripts/download_uav_obb.py to install the splits."
 )
 
 
