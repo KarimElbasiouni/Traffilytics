@@ -160,10 +160,22 @@ python scripts/detect_frames.py --video-id <video_id> --overlays
 
 Writes `data/processed/<video_id>/detections.json` (FR-DET records). Optional overlays land in `data/processed/<video_id>/det_overlays/`.
 
-## Attribution and licences
+## Licences and attribution
 
-UAV-OBB is released under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), which requires attribution wherever its imagery or derived results appear (NFR-DOC-003):
+### Traffilytics — AGPL-3.0
+
+Traffilytics is licensed **[AGPL-3.0-only](LICENSE)**.
+
+This follows from Ultralytics YOLO, which drives OBB training and inference here and is itself AGPL-3.0. Ultralytics treats its code, architectures, training pipelines, **and the resulting trained weights** as covered, so using it without an Enterprise License requires publishing the entire project under AGPL-3.0 — which is what this project does (NFR-DOC-004). The AGPL's network clause (section 13) reaches hosted services, so a publicly deployed Traffilytics instance must offer its complete corresponding source, not just a downloadable copy.
+
+### Trained weights
+
+`models/your_obb.pt` is gitignored because git handles large binaries poorly, but it is **not** exempt from the above: publish it as a GitHub release or model repository alongside any public deployment. Weights derive from both an Ultralytics pretrained checkpoint (AGPL-3.0) and UAV-OBB imagery (CC BY 4.0), so a model card should carry both notices.
+
+### UAV-OBB — CC BY 4.0
+
+The dataset is released under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), which requires attribution wherever its imagery or derived results appear (NFR-DOC-003):
 
 > Ahmad, Israr; Fengjun, Shang; Bibi, Kiran; Slaman Pathan, Muhammad (2026), *UAV-OBB: An Aerial Urban Vehicle Dataset with Oriented Bounding Boxes for Remote Sensing Object Detection in Smart Cities*, Mendeley Data, V3, doi: [10.17632/6snrjwcpkh.3](https://doi.org/10.17632/6snrjwcpkh.3)
 
-Ultralytics YOLO is licensed **AGPL-3.0**. Traffilytics imports it for training and inference, so distributing this platform carries AGPL copyleft obligations (NFR-DOC-004).
+This section summarizes the applicable terms and is not legal advice.
