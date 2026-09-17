@@ -1,1 +1,1 @@
-"""Top-level adapters package: dataset-specific helpers (DRIFT paths, labels, downloads)."""
+"""Top-level adapters package: dataset-specific helpers (UAV-OBB paths and splits)."""

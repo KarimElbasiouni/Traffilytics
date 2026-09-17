@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare Ultralytics data.yaml from local DRIFT-style OBB annotations."""
+"""Prepare Ultralytics data.yaml from a local UAV-OBB style split tree."""
 
 from __future__ import annotations
 
@@ -11,13 +11,19 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from adapters.drift.obb_annotations import DriftOBBDataset
-from adapters.drift.drift_layout import DriftLayout
+from adapters.uav_obb.dataset import ObbDataset
+from adapters.uav_obb.layout import DatasetLayout
+
+_LAYOUT_HINT = (
+    "Expected train/{images,labels} and valid/{images,labels} under the "
+    "annotations root. Download UAV-OBB and extract its train/valid/test "
+    "folders there."
+)
 
 
 def main(argv: list[str] | None = None) -> int:
     """Scan local OBB annotations and write an Ultralytics data.yaml for training."""
-    parser = argparse.ArgumentParser(description="Write YOLO data.yaml for DRIFT OBB annotations")
+    parser = argparse.ArgumentParser(description="Write YOLO data.yaml for UAV-OBB annotations")
     parser.add_argument("--config", default="configs/default.yaml")
     parser.add_argument(
         "--annotations",
@@ -31,18 +37,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    layout = DriftLayout.from_config(args.config)
+    layout = DatasetLayout.from_config(args.config)
     ann_root = Path(args.annotations) if args.annotations else layout.annotations
     try:
-        dataset = DriftOBBDataset.from_annotations_root(ann_root)
+        dataset = ObbDataset.from_annotations_root(ann_root)
     except FileNotFoundError as exc:
-        print(
-            f"ERROR: {exc}\n"
-            "Layout smoke (2 frames): python scripts/download_drift_sample.py\n"
-            "Full GitHub model/ splits (~2,301 frames / ~300K instances): "
-            "python scripts/download_obb_dataset.py --full --src /path/to/The-DRIFT",
-            file=sys.stderr,
-        )
+        print(f"ERROR: {exc}\n{_LAYOUT_HINT}", file=sys.stderr)
         return 1
 
     out = Path(args.out)
@@ -54,12 +54,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Wrote {written}")
     print(f"Pairs: train={train_n} val={val_n}")
     if train_n == 0:
-        print(
-            "WARNING: No train image/label pairs found. "
-            "Place full DRIFT OBB splits under data/annotations/ "
-            "(python scripts/download_obb_dataset.py --full --src /path/to/The-DRIFT).",
-            file=sys.stderr,
-        )
+        print(f"WARNING: No train image/label pairs found. {_LAYOUT_HINT}", file=sys.stderr)
     return 0
 
 

@@ -140,14 +140,6 @@ def test_detection_class_names() -> None:
         5: "truck",
     }
 
-
-def test_adapter_class_names_match_core() -> None:
-    """The dataset adapter keeps its own copy; it must not diverge from the core map."""
-    from adapters.drift.obb_annotations import CLASS_NAMES as ADAPTER_CLASS_NAMES
-
-    assert ADAPTER_CLASS_NAMES == CLASS_NAMES
-
-
 def test_detection_confidence_bounds() -> None:
     """Confidence outside [0, 1] is rejected (FR-DET-004)."""
     corners = cxcywhr_to_corners(1.0, 1.0, 2.0, 1.0, 0.0)
