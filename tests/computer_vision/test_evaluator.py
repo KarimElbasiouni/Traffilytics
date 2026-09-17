@@ -14,7 +14,7 @@ import pytest
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _DEFAULT_CONFIG = str(_REPO_ROOT / "configs" / "default.yaml")
 
-from adapters.drift.obb_annotations import OBBBox
+from computer_vision.detection.obb_labels import OBBBox
 from computer_vision.detection.evaluator import (
     DetectionEvaluator,
     EvaluatorError,

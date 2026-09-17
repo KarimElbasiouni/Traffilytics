@@ -17,6 +17,11 @@ from computer_vision.detection.evaluator import (
     write_metrics_json,
     write_obb_overlay,
 )
+from computer_vision.detection.obb_labels import (
+    OBBBox,
+    load_obb_label_file,
+    parse_obb_label_line,
+)
 from computer_vision.detection.trainer import (
     CudaUnavailableError,
     DetectionTrainer,
@@ -43,6 +48,7 @@ __all__ = [
     "EvalPlan",
     "EvalResult",
     "EvaluatorError",
+    "OBBBox",
     "TrainPlan",
     "TrainResult",
     "TrainerError",
@@ -53,6 +59,8 @@ __all__ = [
     "detect_and_write",
     "detect_video",
     "draw_obb_overlay",
+    "load_obb_label_file",
+    "parse_obb_label_line",
     "write_detections_json",
     "write_metrics_json",
     "write_obb_overlay",

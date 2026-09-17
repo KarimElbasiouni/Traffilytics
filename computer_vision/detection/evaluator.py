@@ -3,7 +3,7 @@
 ``DetectionEvaluator.evaluate`` runs Ultralytics ``model.val`` when weights (or
 an injected stub) are available and writes ``metrics.json`` under
 ``models/runs/eval_<name>/``. Qualitative overlays are always drawable from
-``list[Detection]`` vs GT :class:`~adapters.drift.obb_annotations.OBBBox`
+``list[Detection]`` vs GT :class:`~computer_vision.detection.obb_labels.OBBBox`
 polygons (OpenCV ``polylines``) — no GPU or checkpoint required for that path.
 
 Do not call real Ultralytics ``train()`` from pytest; inject ``model`` instead.
@@ -23,8 +23,8 @@ import cv2
 import numpy as np
 import yaml
 
-from adapters.drift.obb_annotations import OBBBox, load_obb_label_file
 from computer_vision.detection.detector import VehicleDetector
+from computer_vision.detection.obb_labels import OBBBox, load_obb_label_file
 from computer_vision.detection.types import (
     CLASS_NAMES,
     Detection,
