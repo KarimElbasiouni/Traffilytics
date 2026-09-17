@@ -33,7 +33,7 @@ from computer_vision.detection.types import (
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_WEIGHTS = _REPO_ROOT / "models" / "your_obb.pt"
-DEFAULT_DATA_YAML = _REPO_ROOT / "models" / "configs" / "drift_obb_data.yaml"
+DEFAULT_DATA_YAML = _REPO_ROOT / "models" / "configs" / "uav_obb_data.yaml"
 DEFAULT_PROJECT = _REPO_ROOT / "models" / "runs"
 DEFAULT_EVAL_NAME = "obb"
 DEFAULT_CONF_THRESHOLD = 0.25
@@ -471,8 +471,10 @@ class DetectionEvaluator:
 
     Inject ``model`` to stub Ultralytics in tests. Overlay drawing
     (:meth:`draw_overlay`, :func:`draw_obb_overlay`) never requires weights.
-    Optional ``baseline`` compares DRIFT ``best.pt`` in the metrics JSON only —
-    product inference still uses Traffilytics weights.
+    Optional ``baseline`` scores a second checkpoint on the same split and records
+    it in the metrics JSON only — product inference still uses Traffilytics
+    weights. A baseline's mAP is comparable only when its class map matches the
+    dataset's; a DOTA-pretrained OBB checkpoint predicts different classes.
     """
 
     def __init__(
@@ -698,14 +700,14 @@ class DetectionEvaluator:
         plan: EvalPlan,
         val_kwargs: Mapping[str, Any],
     ) -> dict[str, Any]:
-        """Run ``val`` on the optional DRIFT ``best.pt`` comparison checkpoint."""
+        """Score the optional comparison checkpoint on the same split and settings."""
         if self._baseline_model is not None:
             baseline_model = self._baseline_model
         else:
             if plan.baseline is None or not plan.baseline.is_file():
                 raise EvaluatorError(
                     f"Baseline weights not found: {plan.baseline}. "
-                    "Pass a real DRIFT best.pt for comparison only."
+                    "Pass an existing OBB checkpoint (comparison only)."
                 )
             baseline_model = _load_yolo(str(plan.baseline))
         return normalize_val_metrics(baseline_model.val(**dict(val_kwargs)))

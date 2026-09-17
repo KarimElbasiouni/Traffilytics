@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Evaluate Traffilytics YOLO OBB weights on held-out DRIFT labels (Epic 2).
+"""Evaluate Traffilytics YOLO OBB weights on the held-out UAV-OBB split (Epic 2).
 
 Thin CLI around :class:`computer_vision.detection.evaluator.DetectionEvaluator`.
 Writes ``models/runs/eval_<name>/metrics.json`` plus qualitative overlays.
-Optional ``--baseline`` compares a DRIFT ``best.pt`` in that JSON only — it is
-never used as the product model.
+Defaults to the ``valid`` split: UAV-OBB's ``test`` split holds only 10 images,
+too few for a stable mAP (FR-DET-006).
+
+Optional ``--baseline`` scores a second OBB checkpoint on the same split for
+context and records it in that JSON only — it is never the product model, and it
+is only comparable when its class map matches the dataset's six classes.
 """
 
 from __future__ import annotations
@@ -78,12 +82,13 @@ def _print_result(result: EvalResult) -> None:
         base_map = result.baseline_metrics.get("mAP50")
         print("Baseline mAP50:", base_map)
         print("Baseline is comparison-only (not the product model).")
+        print("Comparable only if its class map matches the dataset's six classes.")
 
 
 def main(argv: list[str] | None = None) -> int:
     """Validate dataset YAML, optionally run val + overlays, write metrics.json."""
     parser = argparse.ArgumentParser(
-        description="Evaluate YOLO OBB weights on held-out DRIFT labels"
+        description="Evaluate YOLO OBB weights on the held-out UAV-OBB split"
     )
     parser.add_argument(
         "--config",
@@ -97,8 +102,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--data",
-        default="models/configs/drift_obb_data.yaml",
-        help="Ultralytics data.yaml (default: models/configs/drift_obb_data.yaml)",
+        default="models/configs/uav_obb_data.yaml",
+        help="Ultralytics data.yaml (default: models/configs/uav_obb_data.yaml)",
     )
     parser.add_argument(
         "--name",
@@ -147,7 +152,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--baseline",
         default=None,
-        help="Optional DRIFT best.pt for side-by-side metrics (comparison only)",
+        help=(
+            "Optional second OBB checkpoint scored on the same split for side-by-side "
+            "metrics (comparison only, never the product model). Comparable only if its "
+            "classes match the dataset's six; DOTA-pretrained checkpoints do not."
+        ),
     )
     parser.add_argument(
         "--allow-pretrained",

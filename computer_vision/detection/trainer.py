@@ -19,7 +19,7 @@ import yaml
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_TRAIN_CONFIG = _REPO_ROOT / "models" / "configs" / "train_obb.yaml"
-DEFAULT_DATA_YAML = _REPO_ROOT / "models" / "configs" / "drift_obb_data.yaml"
+DEFAULT_DATA_YAML = _REPO_ROOT / "models" / "configs" / "uav_obb_data.yaml"
 DEFAULT_WEIGHTS_DEST = _REPO_ROOT / "models" / "your_obb.pt"
 DEFAULT_MODEL = "yolov8n-obb.pt"
 _CUDA_REFUSE_MESSAGE = (

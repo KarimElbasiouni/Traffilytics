@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Train Traffilytics YOLO OBB weights on DRIFT annotations (Epic 2).
+"""Train Traffilytics YOLO OBB weights on UAV-OBB annotations (Epic 2).
 
 Thin CLI around :class:`computer_vision.detection.trainer.DetectionTrainer`.
 Requires a CUDA-capable GPU for practical training. CPU may run for smoke tests
-with tiny datasets but is not recommended for full DRIFT training.
+with tiny datasets but is not recommended for a full UAV-OBB run.
 """
 
 from __future__ import annotations
@@ -55,7 +55,9 @@ def _print_result(result: TrainResult) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     """Validate paths, optionally train YOLO OBB, copy best weights to models/your_obb.pt."""
-    parser = argparse.ArgumentParser(description="Train YOLO OBB on DRIFT (Traffilytics weights)")
+    parser = argparse.ArgumentParser(
+        description="Train YOLO OBB on UAV-OBB (Traffilytics weights)"
+    )
     parser.add_argument(
         "--train-config",
         default="models/configs/train_obb.yaml",

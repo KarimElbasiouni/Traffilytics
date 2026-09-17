@@ -44,7 +44,7 @@ models/*.pt
 models/*.pth
 models/*.onnx
 models/runs/
-models/configs/drift_obb_data.yaml
+models/configs/uav_obb_data.yaml
 !models/configs/
 !models/configs/train_obb.yaml
 !models/configs/.gitkeep

@@ -31,8 +31,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--out",
-        default="models/configs/drift_obb_data.yaml",
-        help="Output Ultralytics data.yaml path",
+        default="models/configs/uav_obb_data.yaml",
+        help="Output Ultralytics data.yaml path (default: models/configs/uav_obb_data.yaml)",
     )
     args = parser.parse_args(argv)
 

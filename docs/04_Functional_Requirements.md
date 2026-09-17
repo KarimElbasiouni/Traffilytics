@@ -44,7 +44,7 @@ Traffilytics does not consume any ground-truth trajectory dataset. All trajector
 | FR-DET-005 | The system shall **train** the OBB detector on the UAV-OBB `train` / `valid` splits. |
 | FR-DET-006 | The system shall **evaluate** detector performance on the held-out UAV-OBB `valid` split, reporting mAP50, mAP50-95, precision, and recall plus qualitative overlays. The 10-image `test` split is a spot-check only; headline metrics shall not be quoted from it. |
 
-**Note:** Reusing the YOLO OBB architecture is intended. A publicly pretrained OBB checkpoint may be evaluated as a **baseline** for comparison, but platform detection shall be driven by **Traffilytics-trained** weights.
+**Note:** Reusing the YOLO OBB architecture is intended. Another OBB checkpoint may be evaluated as a **baseline** for comparison, but platform detection shall be driven by **Traffilytics-trained** weights. A baseline's mAP is only comparable when its class map matches UAV-OBB's six classes — a DOTA-pretrained checkpoint predicts a different taxonomy, so it serves as a wiring smoke test rather than a score to beat.
 
 ### Supported Classes
 

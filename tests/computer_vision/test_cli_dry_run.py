@@ -21,7 +21,7 @@ import pytest
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _DEFAULT_CONFIG = _REPO_ROOT / "configs" / "default.yaml"
-_DATA_YAML = _REPO_ROOT / "models" / "configs" / "drift_obb_data.yaml"
+_DATA_YAML = _REPO_ROOT / "models" / "configs" / "uav_obb_data.yaml"
 _PRODUCT_WEIGHTS = _REPO_ROOT / "models" / "your_obb.pt"
 _CLI_TIMEOUT_S = 60
 
@@ -107,7 +107,7 @@ def test_train_obb_script_dry_run(tmp_path: Path) -> None:
     assert not (_REPO_ROOT / "models" / "runs" / "obb_cli_test" / "weights" / "best.pt").exists()
 
 
-@pytest.mark.skipif(not _DATA_YAML.is_file(), reason="generated drift_obb_data.yaml not present")
+@pytest.mark.skipif(not _DATA_YAML.is_file(), reason="generated uav_obb_data.yaml not present")
 def test_train_obb_default_dry_run() -> None:
     """Operator command ``python scripts/train_obb.py --dry-run`` works on CPU."""
     existed = _PRODUCT_WEIGHTS.is_file()
@@ -145,7 +145,7 @@ def test_eval_obb_script_dry_run(tmp_path: Path) -> None:
     assert not (tmp_path / "runs" / "eval_obb" / "metrics.json").exists()
 
 
-@pytest.mark.skipif(not _DATA_YAML.is_file(), reason="generated drift_obb_data.yaml not present")
+@pytest.mark.skipif(not _DATA_YAML.is_file(), reason="generated uav_obb_data.yaml not present")
 def test_eval_obb_default_dry_run() -> None:
     """Operator command ``python scripts/eval_obb.py --dry-run`` works on CPU."""
     result = _run_script(

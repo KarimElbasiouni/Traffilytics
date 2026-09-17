@@ -35,9 +35,9 @@ models:
 
 # Inference / eval defaults for VehicleDetector, scripts/detect_frames.py, and
 # scripts/eval_obb.py. Training hyperparameters live in models/configs/train_obb.yaml.
-# Product path loads only models/your_obb.pt (NFR-ACC-004). A public pretrained
-# OBB checkpoint may be passed as an eval --baseline for comparison only —
-# never as the product model.
+# Product path loads only models/your_obb.pt (NFR-ACC-004). Another OBB checkpoint
+# may be passed as an eval --baseline for comparison only — never as the product
+# model — and its mAP is comparable only if its classes match the dataset's six.
 detection:
   weights: ./models/your_obb.pt
   conf_threshold: 0.25   # FR-DET-004 scores below this are dropped

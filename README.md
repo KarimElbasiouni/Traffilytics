@@ -93,7 +93,7 @@ python scripts/prepare_obb_dataset.py
 
 `--dry-run` prints the copy plan without writing files. `--full` is required so a huge copy cannot happen by accident. The helper only copies a **local** tree; it does not clone GitHub.
 
-Generated `models/configs/drift_obb_data.yaml` is gitignored.
+Generated `models/configs/uav_obb_data.yaml` is gitignored.
 
 ## Train, evaluate, and detect (Epic 2)
 
