@@ -122,9 +122,26 @@ UAV-OBB is an **external dataset** installed into `data/annotations/` (splits) a
 | Detection/tracking tests | CPU-only harnesses; no dataset download in CI |
 | Analytics tests | Scenario checks |
 | Performance baselines | Runtime per clip; train notes |
-| Licence compliance | Document Ultralytics AGPL-3.0 obligations and UAV-OBB attribution |
 
 **Deliverables:** Deployable compose stack + test/benchmark docs.
+
+---
+
+### Epic 7 — Model Release & Licence Compliance
+
+Traffilytics is AGPL-3.0-only because Ultralytics YOLO is, and Ultralytics treats trained
+weights as covered work. Publishing the weights is therefore a compliance obligation, not a
+nice-to-have — and the AGPL's network clause (§13) makes a hosted demo a trigger.
+
+| Issue | Description |
+|-------|-------------|
+| Publish trained weights | Attach `models/your_obb.pt` to a tagged release; it is gitignored, so it is not in the tree by default |
+| Model card | Architecture, training config, `valid`-split metrics, class map, and both notices (Ultralytics AGPL-3.0 + UAV-OBB CC BY 4.0) |
+| Corresponding-source offer | Deployed site links its exact commit, release tag, and weights so remote users can obtain the source (§13) |
+| Provenance manifest | Record dataset version (Mendeley V3), commit SHA, train config, and seeds that produced the weights (NFR-ACC-005) |
+| Notices in artifacts | Ship `LICENSE` inside Docker images and wheels; surface the UAV-OBB citation wherever its imagery appears in the UI (NFR-DOC-003) |
+
+**Deliverables:** A public, citable weights release plus a deployment that satisfies AGPL-3.0 §13.
 
 ---
 
@@ -137,6 +154,7 @@ Epic 1 (Video pipeline + UAV-OBB layout)
       → Epic 4 (Analytics + insights)
         → Epic 5 (FastAPI + DB + upload/jobs + Dashboard + reports)
           → Epic 6 (Docker + tests)
+            → Epic 7 (Weights release + AGPL-3.0 compliance)
 ```
 
 Detector training is an offline GPU step and can run on a free hosted GPU; the rest of the roadmap is CPU-friendly.
@@ -155,6 +173,7 @@ Detector training is an offline GPU step and can run on a free hosted GPU; the r
 - [ ] Upload → job → results flow works without blocking requests
 - [ ] Results in DB, exposed via FastAPI, visible on dashboard
 - [ ] Reports available; app layout Docker-ready
+- [ ] Trained weights published with a model card; any public deployment offers its corresponding source (AGPL-3.0 §13)
 
 ---
 
@@ -162,15 +181,16 @@ Detector training is an offline GPU step and can run on a free hosted GPU; the r
 
 | Label | Use |
 |-------|-----|
-| `epic-1` … `epic-6` | Epic membership |
+| `epic-1` … `epic-7` | Epic membership |
 | `dataset` | UAV-OBB access / annotation adapters |
 | `cv-train` / `cv-track` | Detection training / tracking |
 | `analytics` / `backend` / `frontend` / `devops` | Area |
 | `mvp` | Required for MVP |
 | `evaluation` | Detector metrics and tracking diagnostics |
+| `licence` | Weights release, attribution, AGPL-3.0 obligations |
 
 ---
 
 ## Attribution
 
-UAV-OBB is CC BY 4.0 — cite Ahmad, Fengjun, Bibi & Slaman Pathan (2026), Mendeley Data V3, [doi:10.17632/6snrjwcpkh.3](https://doi.org/10.17632/6snrjwcpkh.3), and state any modifications. Ultralytics is AGPL-3.0; the project licence must be compatible.
+UAV-OBB is CC BY 4.0 — cite Ahmad, Fengjun, Bibi & Slaman Pathan (2026), Mendeley Data V3, [doi:10.17632/6snrjwcpkh.3](https://doi.org/10.17632/6snrjwcpkh.3), and state any modifications. Ultralytics is AGPL-3.0, so Traffilytics is licensed AGPL-3.0-only (see [`LICENSE`](../LICENSE)); trained weights are covered too and ship via the Epic 7 release.
