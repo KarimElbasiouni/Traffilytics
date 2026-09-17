@@ -77,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
     if max_frames is None and video_cfg.get("max_frames") is not None:
         max_frames = int(video_cfg["max_frames"])
 
-    source = args.source or ingest_cfg.get("default_source") or "drift"
+    source = args.source or ingest_cfg.get("default_source") or "upload"
     infer_stab = bool(ingest_cfg.get("infer_stabilized_from_name", True))
 
     stabilized: bool | None

@@ -1,4 +1,4 @@
-"""Unit tests for VideoProcessor using a synthetic MP4 (no DRIFT required)."""
+"""Unit tests for VideoProcessor using a synthetic MP4 (no real footage required)."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from computer_vision.preprocessing.video_processor import VideoProcessor, VideoP
 
 
 def _write_synthetic_mp4(path: Path, *, frames: int = 12, fps: float = 10.0, size=(64, 48)) -> None:
-    """Write a tiny colored MP4 so tests never need a real DRIFT video file."""
+    """Write a tiny colored MP4 so tests never need a real video file."""
     width, height = size
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     writer = cv2.VideoWriter(str(path), fourcc, fps, (width, height))
@@ -80,7 +80,7 @@ def test_extract_frames_with_stride(synthetic_video: Path, tmp_path: Path) -> No
 def test_process_writes_metadata_and_frames(synthetic_video: Path, tmp_path: Path) -> None:
     """Full process() writes metadata.json and the requested number of frames."""
     processed_root = tmp_path / "processed"
-    with VideoProcessor(synthetic_video, source="drift") as vp:
+    with VideoProcessor(synthetic_video, source="upload") as vp:
         result = vp.process(processed_root, stride=2, max_frames=3)
 
     meta_path = Path(result["metadata_path"])

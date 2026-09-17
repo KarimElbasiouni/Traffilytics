@@ -3,16 +3,16 @@
 data:
   root: ./data
   raw: ./data/raw
+  # UAV-OBB train/valid/test split tree (see scripts/prepare_obb_dataset.py)
   annotations: ./data/annotations
-  # DRIFT GT CSVs — Epic 3 benchmarking only; unused for detection train/eval/infer
-  gt_trajectories: ./data/gt_trajectories
   processed: ./data/processed
 
 video:
-  # Prefer DRIFT stabilized clips when available (stabilization itself is not a focus)
+  # Order pre-stabilized clips first when present; stabilization is not implemented
   prefer_stabilized: true
   extensions: [".mp4", ".avi", ".mov", ".mkv"]
-  # Extract every Nth frame for 4K throughput (NFR-PERF-002); set to 1 for all frames
+  # Extract every Nth frame for throughput (NFR-PERF-002); set to 1 for all frames.
+  # Keep low for tracking: Epic 3 association degrades at sparse effective fps.
   frame_stride: 5
   # Optional max frames for smoke / debug (null = no limit)
   max_frames: null
@@ -21,17 +21,9 @@ video:
   jpeg_quality: 90
 
 ingest:
-  default_source: drift
+  default_source: upload
   # If true, treat path/name hints containing "stabil" as stabilized=true
   infer_stabilized_from_name: true
-
-drift:
-  # Hugging Face dataset id
-  hf_dataset: Hj-Lee/The-DRIFT
-  # Local layout under data/
-  raw_subdir: raw
-  annotations_subdir: annotations
-  gt_trajectories_subdir: gt_trajectories
 
 models:
   root: ./models
@@ -41,9 +33,9 @@ models:
 
 # Inference / eval defaults for VehicleDetector, scripts/detect_frames.py, and
 # scripts/eval_obb.py. Training hyperparameters live in models/configs/train_obb.yaml.
-# Product path loads only models/your_obb.pt (NFR-ACC-004). DRIFT best.pt is an
-# optional eval --baseline comparison only — never the product model.
-# GT trajectory CSVs (data.gt_trajectories) are unused until Epic 3 benchmarking.
+# Product path loads only models/your_obb.pt (NFR-ACC-004). A public pretrained
+# OBB checkpoint may be passed as an eval --baseline for comparison only —
+# never as the product model.
 detection:
   weights: ./models/your_obb.pt
   conf_threshold: 0.25   # FR-DET-004 scores below this are dropped

@@ -102,7 +102,7 @@ def _load_detect_frames_module() -> Any:
 
 
 def test_frame_index_from_path() -> None:
-    """Ingest names and DRIFT-style stems expose a trailing frame index."""
+    """Ingest names and dataset-style stems expose a trailing frame index."""
     assert frame_index_from_path(Path("frame_000012.jpg")) == 12
     assert frame_index_from_path(Path("A_frame_0001.png")) == 1
     assert frame_index_from_path(Path("no_digits.jpg"), fallback=7) == 7

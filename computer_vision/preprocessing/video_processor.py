@@ -15,7 +15,7 @@ _SITE_PATTERNS = (
     re.compile(r"site[_\-]?(\d+)", re.IGNORECASE),
     re.compile(r"site[_\-]?([A-I])(?:[_\-]|$)", re.IGNORECASE),
     re.compile(r"(?:^|[_\-])(\d{2})(?:[_\-]|$)", re.IGNORECASE),
-    # DRIFT sample names like A_frame_0000 or A_od_small
+    # Single-letter scene names like A_frame_0000 or A_clip_small
     re.compile(r"(?:^|[_\-])([A-I])(?:[_\-]|$)", re.IGNORECASE),
 )
 
@@ -33,16 +33,16 @@ class VideoProcessor:
         *,
         video_id: str | None = None,
         site: str | None = None,
-        source: str = "drift",
+        source: str = "upload",
         stabilized: bool | None = None,
         infer_stabilized_from_name: bool = True,
     ) -> None:
         """Set up paths and identity fields for one video before opening it.
 
-        video_id defaults to the filename stem. site is inferred from the name
-        when not provided (numeric or DRIFT letter A–I). stabilized can be set
-        explicitly, or guessed from the filename when infer_stabilized_from_name
-        is True.
+        video_id defaults to the filename stem. site is an optional scene label;
+        when not provided it is guessed from the filename (numeric or single
+        letter A–I) and may be None. stabilized can be set explicitly, or guessed
+        from the filename when infer_stabilized_from_name is True.
         """
         self.video_path = Path(video_path).resolve()
         self._cap: cv2.VideoCapture | None = None
@@ -63,7 +63,7 @@ class VideoProcessor:
 
     @staticmethod
     def _infer_site(stem: str) -> str | None:
-        """Guess the DRIFT site id from a filename stem, or return None."""
+        """Guess a scene label from a filename stem, or return None."""
         for pattern in _SITE_PATTERNS:
             match = pattern.search(stem)
             if match:
