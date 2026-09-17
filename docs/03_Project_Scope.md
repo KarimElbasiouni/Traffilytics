@@ -8,10 +8,10 @@
 |------|-------|
 | Source | UAV imagery over urban roads in Chongqing and Wuhan, China |
 | Imagery | 1920×1080 JPEG, predominantly nadir view, ~75–108 m altitude |
-| Conditions | Morning, midday, evening, night, rain, mist/light fog; wide FOV and zoom (strong scale variation) |
+| Conditions | Morning, midday, evening, rain, mist/light fog; wide FOV and zoom (strong scale variation) |
 | Annotations | YOLOv8-OBB text labels — class id + four corner vertices in normalized coordinates |
-| Volume | ~1.4–1.6k images, ~36–47k oriented instances (varies by release version) |
-| Splits | `train/` `valid/` `test/` shipped with the dataset, plus `data.yaml` |
+| Volume | 1,375 images, 35,615 oriented instances |
+| Splits | `train/` 1,158 · `valid/` 207 · `test/` 10 images, plus `data.yaml` |
 | Classes | bike (`0`), bus (`1`), car (`2`), other_vehicle (`3`), taxi (`4`), truck (`5`) |
 | Video | `test_videos_mp4/` — one short clip with sparsely annotated reference frames, plus longer unannotated sequences |
 | Trajectory ground truth | **None** |
@@ -19,7 +19,9 @@
 | Licence | CC BY 4.0 (attribution required) |
 | Download | [Mendeley Data](https://data.mendeley.com/datasets/6snrjwcpkh/3) (DOI 10.17632/6snrjwcpkh) · [Kaggle mirror](https://www.kaggle.com/datasets/mdferozahmedafm/uav-obb-drone-based-urban-vehicle-dataset) |
 
-Image and instance counts differ between the Mendeley release description and the published paper, so the shipped `data.yaml` and split directories are the source of truth — not any figure quoted in these docs.
+The figures above describe the Mendeley **V3** release that `scripts/download_uav_obb.py` installs and checksum-verifies; the published paper quotes different counts. For any local copy, the shipped `data.yaml` and split directories remain the source of truth.
+
+**Evaluation split:** the `test/` split holds only 10 images, far too few for a stable mAP. Headline detector metrics are therefore reported on the 207-image `valid/` split, and `test/` is used as a qualitative spot-check only.
 
 ### Ownership model
 

@@ -36,6 +36,7 @@ Non-functional requirements for Traffilytics as a **complete, deployable traffic
 | NFR-ACC-004 | Failures (corrupt video, training error, model load error) shall fail gracefully with clear status/errors. |
 | NFR-ACC-005 | Trajectory and analytics outputs shall record the model weights and configuration that produced them, so every result is attributable to a specific run. |
 | NFR-ACC-006 | Where no pixel-to-metre scale is supplied, derived units (speed, density) shall be labelled as pixel-based rather than presented as physical measurements. |
+| NFR-ACC-007 | Reported detection metrics shall name the evaluation split and its image count, so small-sample results (such as UAV-OBB's 10-image `test` split) cannot be mistaken for benchmark-grade figures. |
 
 ---
 

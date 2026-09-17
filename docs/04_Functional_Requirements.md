@@ -42,7 +42,7 @@ Traffilytics does not consume any ground-truth trajectory dataset. All trajector
 | FR-DET-003 | The system shall output polygon-based oriented bounding boxes (four corners and/or center/size/angle) in the YOLO-OBB convention used by UAV-OBB labels. |
 | FR-DET-004 | The system shall output detection confidence scores in [0, 1]. |
 | FR-DET-005 | The system shall **train** the OBB detector on the UAV-OBB `train` / `valid` splits. |
-| FR-DET-006 | The system shall **evaluate** detector performance on held-out UAV-OBB labels, reporting mAP50, mAP50-95, precision, and recall plus qualitative overlays. |
+| FR-DET-006 | The system shall **evaluate** detector performance on the held-out UAV-OBB `valid` split, reporting mAP50, mAP50-95, precision, and recall plus qualitative overlays. The 10-image `test` split is a spot-check only; headline metrics shall not be quoted from it. |
 
 **Note:** Reusing the YOLO OBB architecture is intended. A publicly pretrained OBB checkpoint may be evaluated as a **baseline** for comparison, but platform detection shall be driven by **Traffilytics-trained** weights.
 
@@ -226,7 +226,7 @@ These are Traffilytics-owned features; they are not required to mirror any third
 | ID | Requirement |
 |----|-------------|
 | FR-ML-001 | Training pipelines shall use PyTorch / YOLO training tooling on the UAV-OBB annotation splits. |
-| FR-ML-002 | Evaluation pipelines shall report detection metrics on held-out UAV-OBB labels and tracking diagnostics on video. |
+| FR-ML-002 | Evaluation pipelines shall report detection metrics on the held-out UAV-OBB `valid` split and tracking diagnostics on video. |
 | FR-DEP-001 | The application shall be structured as modular, deployable services (e.g., Dockerized). |
 
 ---
