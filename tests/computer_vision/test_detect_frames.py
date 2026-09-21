@@ -19,6 +19,7 @@ from computer_vision.detection.detector import (
     frame_index_from_path,
     list_frame_images,
     write_detections_json,
+    load_detections_json,
 )
 from computer_vision.detection.types import Detection
 
@@ -151,6 +152,28 @@ def test_write_detections_json_matches_fr_det_fields(tmp_path: Path) -> None:
     assert row["angle"] == pytest.approx(0.0)
     assert len(row["corners"]) == 4
     assert all(len(pt) == 2 for pt in row["corners"])
+
+
+def test_load_detections_json_roundtrip(tmp_path: Path) -> None:
+    dest = tmp_path / "detections.json"
+    write_detections_json(
+        [_sample_det()],
+        dest,
+        video_id="clip",
+        weights="models/your_obb.pt",
+        n_frames=1,
+    )
+    loaded, meta = load_detections_json(dest)
+    assert len(loaded) == 1
+    assert loaded[0].class_id == 2
+    assert loaded[0].frame == 12
+    assert meta["video_id"] == "clip"
+    assert meta["n_detections"] == 1
+
+
+def test_load_detections_json_missing_file(tmp_path: Path) -> None:
+    with pytest.raises(DetectorError, match="not found"):
+        load_detections_json(tmp_path / "absent.json")
 
 
 def test_detect_and_write_stub_and_overlays(tmp_path: Path) -> None:

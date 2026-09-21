@@ -6,6 +6,7 @@ from computer_vision.detection.detector import (
     VehicleDetector,
     detect_and_write,
     detect_video,
+    load_detections_json,
     write_detections_json,
 )
 from computer_vision.detection.evaluator import (
@@ -59,6 +60,7 @@ __all__ = [
     "detect_and_write",
     "detect_video",
     "draw_obb_overlay",
+    "load_detections_json",
     "load_obb_label_file",
     "parse_obb_label_line",
     "write_detections_json",

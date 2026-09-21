@@ -348,6 +348,29 @@ def write_detections_json(
     return dest_path
 
 
+def load_detections_json(path: str | Path) -> tuple[list[Detection], dict[str, Any]]:
+    """Read ``detections.json`` written by :func:`write_detections_json`.
+
+    Returns ``(detections, metadata)`` where metadata is the payload minus the
+    ``detections`` list (video_id, weights, thresholds, frame counts).
+    """
+    dest = Path(path)
+    if not dest.is_file():
+        raise DetectorError(f"Detections file not found: {dest}")
+    try:
+        payload = json.loads(dest.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise DetectorError(f"Invalid detections JSON: {dest} ({exc})") from exc
+    if not isinstance(payload, dict):
+        raise DetectorError(f"Detections JSON must be an object: {dest}")
+    raw = payload.get("detections")
+    if not isinstance(raw, list):
+        raise DetectorError(f"Detections JSON missing a detections list: {dest}")
+    detections = [Detection.from_dict(row) for row in raw]
+    meta = {k: v for k, v in payload.items() if k != "detections"}
+    return detections, meta
+
+
 def detect_and_write(
     detector: VehicleDetector,
     frame_paths: Sequence[str | Path],
