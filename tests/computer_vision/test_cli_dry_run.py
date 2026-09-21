@@ -5,12 +5,14 @@ These cover the Step 2 "Done when" commands:
 - ``python scripts/train_obb.py --dry-run``
 - ``python scripts/eval_obb.py --dry-run``
 - ``python scripts/detect_frames.py --dry-run``
+- ``python scripts/track_video.py --dry-run``
 
 plus missing-weights error paths. Timeouts fail fast if a real ``train()`` starts.
 """
 
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -237,3 +239,95 @@ def test_detect_frames_script_missing_weights(tmp_path: Path) -> None:
     assert "OBB weights not found" in result.stderr
     assert "FR-DET-001" in result.stderr
     assert not dest.exists()
+
+
+def test_track_video_script_dry_run(tmp_path: Path) -> None:
+    """``python scripts/track_video.py --dry-run`` validates detections.json on CPU."""
+    from computer_vision.detection.detector import write_detections_json
+    from computer_vision.detection.types import Detection
+
+    dest_dir = tmp_path / "clip"
+    detections_path = dest_dir / "detections.json"
+    det = Detection.from_cxcywhr(
+        frame=0,
+        class_id=2,
+        confidence=0.9,
+        center_x=50.0,
+        center_y=50.0,
+        width=20.0,
+        height=10.0,
+        angle=0.0,
+    )
+    write_detections_json([det], detections_path, video_id="clip", n_frames=1)
+    out = dest_dir / "trajectories.json"
+    result = _run_script(
+        "track_video.py",
+        [
+            "--config",
+            str(_DEFAULT_CONFIG),
+            "--detections",
+            str(detections_path),
+            "--out",
+            str(out),
+            "--dry-run",
+        ],
+    )
+    assert result.returncode == 0, result.stderr
+    assert "Dry run OK" in result.stdout
+    assert "not starting tracking" in result.stdout
+    assert not out.exists()
+
+
+def test_track_video_script_missing_detections(tmp_path: Path) -> None:
+    result = _run_script(
+        "track_video.py",
+        [
+            "--config",
+            str(_DEFAULT_CONFIG),
+            "--detections",
+            str(tmp_path / "missing.json"),
+        ],
+    )
+    assert result.returncode == 1
+    assert "not found" in result.stderr.lower()
+
+
+def test_track_video_script_writes_trajectories(tmp_path: Path) -> None:
+    """Real ByteTrack path writes trajectories.json (skipped without ultralytics)."""
+    pytest.importorskip("ultralytics")
+    from computer_vision.detection.detector import write_detections_json
+    from computer_vision.detection.types import Detection
+
+    dets = [
+        Detection.from_cxcywhr(
+            frame=i,
+            class_id=2,
+            confidence=0.9,
+            center_x=80.0 + i * 12.0,
+            center_y=100.0,
+            width=40.0,
+            height=20.0,
+            angle=0.0,
+        )
+        for i in range(8)
+    ]
+    detections_path = tmp_path / "clip" / "detections.json"
+    write_detections_json(dets, detections_path, video_id="clip", n_frames=8)
+    out = tmp_path / "clip" / "trajectories.json"
+    result = _run_script(
+        "track_video.py",
+        [
+            "--config",
+            str(_DEFAULT_CONFIG),
+            "--detections",
+            str(detections_path),
+            "--out",
+            str(out),
+        ],
+    )
+    assert result.returncode == 0, result.stderr
+    assert out.is_file()
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["tracker"] == "bytetrack"
+    assert payload["n_tracks"] == 1
+    assert payload["points"][0]["lane"] is None

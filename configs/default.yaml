@@ -45,3 +45,17 @@ detection:
   imgsz: 640
   device: auto           # cuda if available else cpu
   allow_pretrained: false  # wiring only; never the product default (not FR-DET-001)
+
+# ByteTrack defaults for VehicleTracker / scripts/track_video.py (Epic 3).
+# Association uses each OBB's axis-aligned envelope; stored pose stays OBB.
+tracking:
+  tracker: bytetrack
+  track_high_thresh: 0.25
+  track_low_thresh: 0.1
+  new_track_thresh: 0.25
+  track_buffer: 30
+  match_thresh: 0.8
+  fuse_score: true
+  # Drop tracks seen on fewer frames than this when writing trajectories.json
+  min_hits: 1
+

@@ -22,6 +22,7 @@ dependencies:
       - torch
       - torchvision
       - ultralytics>=8.1
+      - lap>=0.5.12
       - fastapi>=0.110
       - uvicorn[standard]>=0.27
       - sqlalchemy>=2.0
