@@ -160,6 +160,15 @@ python scripts/detect_frames.py --video-id <video_id> --overlays
 
 Writes `data/processed/<video_id>/detections.json` (FR-DET records). Optional overlays land in `data/processed/<video_id>/det_overlays/`.
 
+### Track detections into trajectories (Epic 3)
+
+```bash
+python scripts/track_video.py --video-id <video_id>
+python scripts/track_video.py --detections data/processed/<video_id>/detections.json --dry-run
+```
+
+Reads `detections.json` and writes `data/processed/<video_id>/trajectories.json` with ByteTrack `track_id`s. Pose fields stay the detector's OBBs; `lane` is null until lane polygons are configured. Needs `ultralytics` (and `lap`) on the real path; `--dry-run` only checks the detections file.
+
 ## Licences and attribution
 
 ### Traffilytics — AGPL-3.0
