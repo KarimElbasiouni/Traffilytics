@@ -58,4 +58,13 @@ tracking:
   fuse_score: true
   # Drop tracks seen on fewer frames than this when writing trajectories.json
   min_hits: 1
+  # Overlay video fps (ingested frames, not source fps)
+  overlay_fps: 10
+  # Handoff proxy for suspected ID switches (pixels / frame-steps; no GT)
+  id_switch_max_gap: 5
+  id_switch_max_dist: 80
+
+# Per-video lane/zone polygons (FR-TRK-006). Missing file → lane stays null.
+lanes:
+  dir: ./configs/lanes
 

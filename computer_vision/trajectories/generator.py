@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from computer_vision.tracking.types import TrackedDetection
+from computer_vision.trajectories.lanes import LaneAssigner
 from computer_vision.trajectories.types import Trajectory, TrajectoryPoint
 
 DEFAULT_TRAJECTORIES_NAME = "trajectories.json"
@@ -32,7 +33,8 @@ def summarize_tracks(trajectories: Sequence[Trajectory]) -> dict[str, Any]:
 class TrajectoryGenerator:
     """Group tracked detections by ``track_id`` into time-ordered trajectories.
 
-    ``lane`` is left null until :class:`LaneAssigner` (FR-TRK-006) lands.
+    Pass a :class:`~computer_vision.trajectories.lanes.LaneAssigner` to stamp
+    ``lane`` on each point (FR-TRK-006); otherwise lane stays null.
     """
 
     min_hits: int = 1
@@ -42,6 +44,7 @@ class TrajectoryGenerator:
         tracked: Sequence[TrackedDetection],
         *,
         video_id: str,
+        assigner: LaneAssigner | None = None,
     ) -> list[Trajectory]:
         """Return trajectories sorted by ``track_id``; drop tracks shorter than ``min_hits``."""
         buckets: dict[int, list[TrackedDetection]] = defaultdict(list)
@@ -67,6 +70,8 @@ class TrajectoryGenerator:
                     lane=None,
                 )
             )
+        if assigner is not None:
+            return assigner.apply(trajectories)
         return trajectories
 
     def write_json(
@@ -79,6 +84,8 @@ class TrajectoryGenerator:
         extra: dict[str, Any] | None = None,
     ) -> Path:
         """Write ``trajectories.json`` (grouped tracks + flat points + diagnostics)."""
+        from computer_vision.tracking.diagnostics import TrackingDiagnostics
+
         dest_path = Path(dest)
         dest_path.parent.mkdir(parents=True, exist_ok=True)
         points = [p.to_dict() for traj in trajectories for p in traj.points]
@@ -86,7 +93,7 @@ class TrajectoryGenerator:
             "video_id": video_id or (trajectories[0].video_id if trajectories else None),
             "tracker": tracker,
             "lane": None,
-            "diagnostics": summarize_tracks(trajectories),
+            "diagnostics": TrackingDiagnostics().report(trajectories),
             "n_tracks": len(trajectories),
             "n_points": len(points),
             "tracks": [t.to_dict() for t in trajectories],

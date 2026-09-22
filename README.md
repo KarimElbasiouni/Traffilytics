@@ -164,10 +164,24 @@ Writes `data/processed/<video_id>/detections.json` (FR-DET records). Optional ov
 
 ```bash
 python scripts/track_video.py --video-id <video_id>
+python scripts/track_video.py --video-id <video_id> --overlays
+python scripts/track_video.py --video-id <video_id> --lanes configs/lanes/<video_id>.json
 python scripts/track_video.py --detections data/processed/<video_id>/detections.json --dry-run
 ```
 
-Reads `detections.json` and writes `data/processed/<video_id>/trajectories.json` with ByteTrack `track_id`s. Pose fields stay the detector's OBBs; `lane` is null until lane polygons are configured. Needs `ultralytics` (and `lap`) on the real path; `--dry-run` only checks the detections file.
+Reads `detections.json` and writes `trajectories.json` plus `tracking_diagnostics.json`. `--overlays` draws `track_id` on ingested frames (`track_overlays/` stills and `tracks_overlay.mp4`). Pose fields stay the detector's OBBs.
+
+Lane labels come from a per-video JSON under `configs/lanes/` (FR-TRK-006). If that file is missing, `lane` stays `null`. Example:
+
+```json
+{
+  "video_id": "clip",
+  "lanes": [{ "id": "lane_1", "polygon": [[0, 0], [100, 0], [100, 50], [0, 50]] }],
+  "zones": []
+}
+```
+
+Diagnostics are **not** MOTA: UAV-OBB has no trajectory ground truth. `suspected_id_switches` counts same-class handoffs (a track ends and another starts nearby). Needs `ultralytics` (and `lap`) on the real path; `--dry-run` only checks the detections file.
 
 ## Licences and attribution
 

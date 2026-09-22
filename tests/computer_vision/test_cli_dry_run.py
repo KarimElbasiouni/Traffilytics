@@ -278,6 +278,54 @@ def test_track_video_script_dry_run(tmp_path: Path) -> None:
     assert not out.exists()
 
 
+def test_track_video_script_dry_run_overlays(tmp_path: Path) -> None:
+    from computer_vision.detection.detector import write_detections_json
+    from computer_vision.detection.types import Detection
+
+    detections_path = tmp_path / "clip" / "detections.json"
+    det = Detection.from_cxcywhr(
+        frame=0, class_id=2, confidence=0.9,
+        center_x=50.0, center_y=50.0, width=20.0, height=10.0, angle=0.0,
+    )
+    write_detections_json([det], detections_path, video_id="clip", n_frames=1)
+    result = _run_script(
+        "track_video.py",
+        [
+            "--config", str(_DEFAULT_CONFIG),
+            "--detections", str(detections_path),
+            "--overlays",
+            "--dry-run",
+        ],
+    )
+    assert result.returncode == 0, result.stderr
+    assert "track_overlays" in result.stdout
+    assert "tracks_overlay.mp4" in result.stdout
+    assert not (tmp_path / "clip" / "track_overlays").exists()
+
+
+def test_track_video_script_missing_lanes_file(tmp_path: Path) -> None:
+    from computer_vision.detection.detector import write_detections_json
+    from computer_vision.detection.types import Detection
+
+    detections_path = tmp_path / "clip" / "detections.json"
+    det = Detection.from_cxcywhr(
+        frame=0, class_id=2, confidence=0.9,
+        center_x=50.0, center_y=50.0, width=20.0, height=10.0, angle=0.0,
+    )
+    write_detections_json([det], detections_path, video_id="clip", n_frames=1)
+    result = _run_script(
+        "track_video.py",
+        [
+            "--config", str(_DEFAULT_CONFIG),
+            "--detections", str(detections_path),
+            "--lanes", str(tmp_path / "absent.json"),
+            "--dry-run",
+        ],
+    )
+    assert result.returncode == 1
+    assert "Lane config not found" in result.stderr
+
+
 def test_track_video_script_missing_detections(tmp_path: Path) -> None:
     result = _run_script(
         "track_video.py",
