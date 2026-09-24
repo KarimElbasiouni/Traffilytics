@@ -2,7 +2,9 @@
 
 from computer_vision.trajectories.generator import (
     DEFAULT_TRAJECTORIES_NAME,
+    TrajectoryError,
     TrajectoryGenerator,
+    load_trajectories_json,
     summarize_tracks,
 )
 from computer_vision.trajectories.lanes import LaneAssigner, LaneConfigError, NamedPolygon
@@ -14,7 +16,9 @@ __all__ = [
     "LaneConfigError",
     "NamedPolygon",
     "Trajectory",
+    "TrajectoryError",
     "TrajectoryGenerator",
     "TrajectoryPoint",
+    "load_trajectories_json",
     "summarize_tracks",
 ]

@@ -6,13 +6,19 @@ import json
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Mapping, Sequence
 
 from computer_vision.tracking.types import TrackedDetection
 from computer_vision.trajectories.lanes import LaneAssigner
 from computer_vision.trajectories.types import Trajectory, TrajectoryPoint
 
 DEFAULT_TRAJECTORIES_NAME = "trajectories.json"
+
+
+class TrajectoryError(Exception):
+    """Raised when trajectories.json is missing or unreadable."""
+
+    exit_code = 1
 
 
 def summarize_tracks(trajectories: Sequence[Trajectory]) -> dict[str, Any]:
@@ -103,3 +109,60 @@ class TrajectoryGenerator:
             payload.update(extra)
         dest_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
         return dest_path
+
+
+def load_trajectories_json(path: str | Path) -> tuple[list[Trajectory], dict[str, Any]]:
+    """Read ``trajectories.json`` written by :meth:`TrajectoryGenerator.write_json`.
+
+    Prefers the grouped ``tracks`` list; falls back to regrouping the flat
+    ``points`` array. Returns ``(trajectories, metadata)`` with the payload minus
+    those lists.
+    """
+    dest = Path(path)
+    if not dest.is_file():
+        raise TrajectoryError(f"Trajectories file not found: {dest}")
+    try:
+        payload = json.loads(dest.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise TrajectoryError(f"Invalid trajectories JSON: {dest} ({exc})") from exc
+    if not isinstance(payload, dict):
+        raise TrajectoryError(f"Trajectories JSON must be an object: {dest}")
+
+    trajectories = _trajectories_from_payload(payload, source=dest)
+    skip = {"tracks", "points"}
+    meta = {k: v for k, v in payload.items() if k not in skip}
+    return trajectories, meta
+
+
+def _trajectories_from_payload(
+    payload: Mapping[str, Any],
+    *,
+    source: Path,
+) -> list[Trajectory]:
+    raw_tracks = payload.get("tracks")
+    if isinstance(raw_tracks, list) and raw_tracks:
+        return [Trajectory.from_dict(row) for row in raw_tracks if isinstance(row, Mapping)]
+
+    raw_points = payload.get("points")
+    if not isinstance(raw_points, list):
+        raise TrajectoryError(f"Trajectories JSON missing tracks/points: {source}")
+    buckets: dict[int, list[TrajectoryPoint]] = defaultdict(list)
+    for row in raw_points:
+        if not isinstance(row, Mapping):
+            continue
+        point = TrajectoryPoint.from_dict(row)
+        buckets[point.track_id].append(point)
+    trajectories: list[Trajectory] = []
+    default_video = str(payload.get("video_id") or "")
+    for track_id in sorted(buckets):
+        points = sorted(buckets[track_id], key=lambda p: p.frame)
+        trajectories.append(
+            Trajectory(
+                track_id=track_id,
+                video_id=points[0].video_id or default_video,
+                class_id=points[0].class_id,
+                points=points,
+                lane=None,
+            )
+        )
+    return trajectories

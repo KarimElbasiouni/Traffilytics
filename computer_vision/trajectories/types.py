@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Mapping
 
 from computer_vision.detection.types import CLASS_NAMES
 from computer_vision.tracking.types import TrackedDetection
@@ -25,6 +25,34 @@ class TrajectoryPoint:
     video_id: str
     lane: str | None = None
     corners: tuple[tuple[float, float], tuple[float, float], tuple[float, float], tuple[float, float]] | None = None
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> TrajectoryPoint:
+        """Rebuild a point from an FR-TRK JSON object."""
+        raw_corners = data.get("corners")
+        corners = None
+        if raw_corners is not None:
+            corners = tuple((float(pt[0]), float(pt[1])) for pt in raw_corners)
+        class_id = data.get("class_id")
+        if class_id is None:
+            class_id = 0
+        lane = data.get("lane")
+        if lane is not None:
+            lane = str(lane)
+        return cls(
+            track_id=int(data["track_id"]),
+            frame=int(data["frame"]),
+            center_x=float(data["center_x"]),
+            center_y=float(data["center_y"]),
+            width=float(data.get("width") or 0.0),
+            height=float(data.get("height") or 0.0),
+            angle=float(data.get("angle") or 0.0),
+            class_id=int(class_id),
+            confidence=float(data.get("confidence") or 0.0),
+            video_id=str(data.get("video_id") or ""),
+            lane=lane,
+            corners=corners,
+        )
 
     @classmethod
     def from_tracked(
@@ -97,6 +125,27 @@ class Trajectory:
     @property
     def exit_frame(self) -> int:
         return self.points[-1].frame if self.points else -1
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> Trajectory:
+        """Rebuild a track from ``trajectories.json`` ``tracks[]`` objects."""
+        raw_points = data.get("points") or []
+        points = [TrajectoryPoint.from_dict(row) for row in raw_points]
+        points.sort(key=lambda p: p.frame)
+        class_id = data.get("class_id")
+        if class_id is None:
+            class_id = points[0].class_id if points else 0
+        video_id = str(data.get("video_id") or (points[0].video_id if points else ""))
+        lane = data.get("lane")
+        if lane is not None:
+            lane = str(lane)
+        return cls(
+            track_id=int(data["track_id"]),
+            video_id=video_id,
+            class_id=int(class_id),
+            points=points,
+            lane=lane,
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {

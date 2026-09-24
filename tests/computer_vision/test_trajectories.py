@@ -92,3 +92,28 @@ def test_write_json_includes_diagnostics(tmp_path: Path) -> None:
     assert payload["diagnostics"]["singleton_tracks"] == 1
     assert payload["points"][0]["track_id"] == 1
     assert summarize_tracks(trajs)["n_tracks"] == 2
+
+
+def test_load_trajectories_json_roundtrip(tmp_path: Path) -> None:
+    from computer_vision.trajectories.generator import load_trajectories_json
+
+    tracked = [
+        _tracked(0, 1, cx=10.0),
+        _tracked(1, 1, cx=12.0),
+        _tracked(0, 2, cx=80.0),
+    ]
+    gen = TrajectoryGenerator()
+    trajs = gen.generate(tracked, video_id="clip")
+    dest = gen.write_json(trajs, tmp_path / "trajectories.json", video_id="clip")
+    loaded, meta = load_trajectories_json(dest)
+    assert meta["video_id"] == "clip"
+    assert [t.track_id for t in loaded] == [1, 2]
+    assert loaded[0].points[0].center_x == pytest.approx(10.0)
+    assert loaded[0].lane is None
+
+
+def test_load_trajectories_json_missing(tmp_path: Path) -> None:
+    from computer_vision.trajectories.generator import TrajectoryError, load_trajectories_json
+
+    with pytest.raises(TrajectoryError, match="not found"):
+        load_trajectories_json(tmp_path / "missing.json")
