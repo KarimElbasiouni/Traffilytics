@@ -1,1 +1,1 @@
-"""Optional micro metrics (lane change, TTC) — not required for MVP."""
+"""Optional micro metrics (lane change, TTC) — deferred (FR-MIC-001 / FR-MIC-002)."""
