@@ -183,6 +183,19 @@ Lane labels come from a per-video JSON under `configs/lanes/` (FR-TRK-006). If t
 
 Diagnostics are **not** MOTA: UAV-OBB has no trajectory ground truth. `suspected_id_switches` counts same-class handoffs (a track ends and another starts nearby). Needs `ultralytics` (and `lap`) on the real path; `--dry-run` only checks the detections file.
 
+### Analyze trajectories (Epic 4)
+
+```bash
+python scripts/analyze_video.py --video-id <video_id>
+python scripts/analyze_video.py --video-id <video_id> --lanes configs/lanes/<video_id>.json
+python scripts/analyze_video.py --trajectories data/processed/<video_id>/trajectories.json --dry-run
+python scripts/analyze_video.py --video-id <video_id> --pixels-per-metre 12.5
+```
+
+Reads `trajectories.json` and writes `analytics.json` (flow, flow–density, bottleneck, imbalance, events, template insights). Speed and density stay **pixel-labelled** unless you pass `--pixels-per-metre` (or set `analytics.pixels_per_metre` in config). Lane imbalance needs stamped `lane` values or a lane JSON; bottleneck location needs `zones` in that JSON. Missing lanes/zones are skipped, not invented.
+
+`--dry-run` only checks the trajectories file. Optional LC/TTC (`analytics/micro/`) is not implemented.
+
 ## Licences and attribution
 
 ### Traffilytics — AGPL-3.0

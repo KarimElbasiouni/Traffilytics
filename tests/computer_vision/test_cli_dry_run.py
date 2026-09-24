@@ -6,6 +6,7 @@ These cover the Step 2 "Done when" commands:
 - ``python scripts/eval_obb.py --dry-run``
 - ``python scripts/detect_frames.py --dry-run``
 - ``python scripts/track_video.py --dry-run``
+- ``python scripts/analyze_video.py --dry-run``
 
 plus missing-weights error paths. Timeouts fail fast if a real ``train()`` starts.
 """
@@ -379,3 +380,94 @@ def test_track_video_script_writes_trajectories(tmp_path: Path) -> None:
     assert payload["tracker"] == "bytetrack"
     assert payload["n_tracks"] == 1
     assert payload["points"][0]["lane"] is None
+
+
+def _write_mini_trajectories(path: Path) -> Path:
+    from computer_vision.detection.types import Detection
+    from computer_vision.tracking.types import TrackedDetection
+    from computer_vision.trajectories.generator import TrajectoryGenerator
+
+    tracked = [
+        TrackedDetection(
+            detection=Detection.from_cxcywhr(
+                frame=i,
+                class_id=2,
+                confidence=0.9,
+                center_x=10.0 + i * 5.0,
+                center_y=20.0,
+                width=10.0,
+                height=10.0,
+                angle=0.0,
+            ),
+            track_id=1,
+        )
+        for i in range(4)
+    ]
+    trajs = TrajectoryGenerator().generate(tracked, video_id="clip")
+    dest = path / "trajectories.json"
+    TrajectoryGenerator().write_json(trajs, dest, video_id="clip")
+    return dest
+
+
+def test_analyze_video_script_dry_run(tmp_path: Path) -> None:
+    traj_path = _write_mini_trajectories(tmp_path / "clip")
+    out = tmp_path / "clip" / "analytics.json"
+    result = _run_script(
+        "analyze_video.py",
+        [
+            "--config",
+            str(_DEFAULT_CONFIG),
+            "--trajectories",
+            str(traj_path),
+            "--out",
+            str(out),
+            "--fps",
+            "10",
+            "--dry-run",
+        ],
+    )
+    assert result.returncode == 0, result.stderr
+    assert "Dry run OK" in result.stdout
+    assert "not starting analytics" in result.stdout
+    assert not out.exists()
+
+
+def test_analyze_video_script_missing_trajectories(tmp_path: Path) -> None:
+    result = _run_script(
+        "analyze_video.py",
+        [
+            "--config",
+            str(_DEFAULT_CONFIG),
+            "--trajectories",
+            str(tmp_path / "missing.json"),
+            "--fps",
+            "10",
+        ],
+    )
+    assert result.returncode == 1
+    assert "not found" in result.stderr.lower()
+
+
+def test_analyze_video_script_writes_analytics(tmp_path: Path) -> None:
+    traj_path = _write_mini_trajectories(tmp_path / "clip")
+    out = tmp_path / "clip" / "analytics.json"
+    result = _run_script(
+        "analyze_video.py",
+        [
+            "--config",
+            str(_DEFAULT_CONFIG),
+            "--trajectories",
+            str(traj_path),
+            "--out",
+            str(out),
+            "--fps",
+            "10",
+        ],
+    )
+    assert result.returncode == 0, result.stderr
+    assert out.is_file()
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["video_id"] == "clip"
+    assert payload["units"]["labelled_as_physical"] is False
+    assert "flow_density" in payload["flow"]
+    assert payload["insights"]

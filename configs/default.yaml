@@ -68,3 +68,19 @@ tracking:
 lanes:
   dir: ./configs/lanes
 
+# Analytics engine (Epic 4). Speed/density stay pixel-labelled unless
+# pixels_per_metre is set here or passed as --pixels-per-metre (FR-FLOW-005).
+analytics:
+  window_seconds: 2.0
+  pixels_per_metre: null
+  stopped_speed_px_s: 8.0
+  stopped_speed_m_s: 0.5
+  stopped_min_seconds: 1.5
+  free_speed_quantile: 0.85
+  congested_speed_ratio: 0.5
+  sudden_speed_drop: 0.4
+  queue_fraction: 0.5
+  heatmap_rows: 12
+  heatmap_cols: 12
+
+
