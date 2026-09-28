@@ -4,6 +4,7 @@ from computer_vision.tracking.bytetrack import ByteTrackBackend, TrackerError
 from computer_vision.tracking.diagnostics import TrackingDiagnostics
 from computer_vision.tracking.overlay import (
     draw_tracked_overlay,
+    ensure_overlay_video,
     write_overlay_stills,
     write_overlay_video,
 )
@@ -17,6 +18,7 @@ __all__ = [
     "TrackingDiagnostics",
     "VehicleTracker",
     "draw_tracked_overlay",
+    "ensure_overlay_video",
     "write_overlay_stills",
     "write_overlay_video",
 ]

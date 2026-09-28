@@ -29,6 +29,7 @@ from computer_vision.tracking.diagnostics import (
 from computer_vision.tracking.overlay import (
     DEFAULT_OVERLAY_DIRNAME,
     DEFAULT_OVERLAY_VIDEO_NAME,
+    boxes_for_overlay,
     write_overlay_stills,
     write_overlay_video,
 )
@@ -276,9 +277,19 @@ def main(argv: list[str] | None = None) -> int:
         frames_dir = detections_path.parent / "frames"
         fps = float(track_cfg.get("overlay_fps") or 10)
         try:
-            stills = write_overlay_stills(frames_dir, tracked, overlay_dir or dest.parent)
+            labelled, extra = boxes_for_overlay(trajectories, detections)
+            stills = write_overlay_stills(
+                frames_dir,
+                labelled,
+                overlay_dir or dest.parent,
+                extra_detections=extra,
+            )
             video_path = write_overlay_video(
-                frames_dir, tracked, overlay_video or dest.parent / DEFAULT_OVERLAY_VIDEO_NAME, fps=fps
+                frames_dir,
+                labelled,
+                overlay_video or dest.parent / DEFAULT_OVERLAY_VIDEO_NAME,
+                extra_detections=extra,
+                fps=fps,
             )
         except DetectorError as exc:
             print(f"WARNING: overlays skipped ({exc})", file=sys.stderr)
