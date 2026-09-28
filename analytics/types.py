@@ -58,7 +58,7 @@ class UnitSystem:
         note = (
             "physical units from pixels_per_metre"
             if self.labelled_as_physical
-            else "pixel-based; not physical measurements (NFR-ACC-006)"
+            else "pixel-based — no ground scale"
         )
         return {
             "speed": self.speed_unit,

@@ -29,15 +29,15 @@ def generate_insights(
     if n_trajectories == 0:
         insights.append(Insight(id="empty", text=f"Scene {video_id}: no trajectories to analyze."))
         return insights
+    _ = units_note
 
     speed = f"{flow.mean_speed:.1f} {speed_unit}" if flow.mean_speed is not None else "n/a"
     insights.append(
         Insight(
             id="overview",
             text=(
-                f"Scene {video_id}: {n_trajectories} tracks, "
-                f"{flow.vehicles_per_minute:.1f} vehicles/min, mean speed {speed}. "
-                f"Units: {units_note}."
+                f"{n_trajectories} tracks, "
+                f"{flow.vehicles_per_minute:.1f} vehicles/min, mean speed {speed}."
             ),
         )
     )
@@ -53,11 +53,11 @@ def generate_insights(
                 ),
             )
         )
-    else:
+    elif bottleneck.configured:
         insights.append(
             Insight(
                 id="bottleneck",
-                text="No analysis zones configured; bottleneck location was not inferred.",
+                text="Zones are configured; no bottleneck stood out.",
             )
         )
 
@@ -83,25 +83,27 @@ def generate_insights(
                     text=f"Only one lane observed ({top.lane}); no pair to compare.",
                 )
             )
-    else:
-        insights.append(
-            Insight(
-                id="imbalance",
-                text="No lane polygons configured; lane utilization was not computed.",
-            )
-        )
 
     stopped = sum(1 for e in events if e.type == "stopped_vehicle")
     sudden = sum(1 for e in events if e.type == "sudden_congestion")
     spill = sum(1 for e in events if e.type == "queue_spillback")
-    insights.append(
-        Insight(
-            id="events",
-            text=(
-                f"Events: {stopped} stopped vehicle(s), "
-                f"{sudden} sudden congestion, {spill} queue spillback."
-            ),
+    total_events = stopped + sudden + spill
+    if total_events:
+        insights.append(
+            Insight(
+                id="events",
+                text=(
+                    f"Events: {stopped} stopped vehicle(s), "
+                    f"{sudden} sudden congestion, {spill} queue spillback."
+                ),
+            )
         )
-    )
+    else:
+        insights.append(
+            Insight(
+                id="events",
+                text="No stopped vehicles, sudden congestion, or queue spillback.",
+            )
+        )
     return insights
 
