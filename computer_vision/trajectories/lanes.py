@@ -82,6 +82,37 @@ class LaneAssigner:
     source: Path | None = None
 
     @classmethod
+    def from_mapping(
+        cls,
+        payload: Mapping[str, Any],
+        *,
+        source: Path | None = None,
+    ) -> LaneAssigner:
+        """Build an assigner from a lane/zone JSON object (file or API body)."""
+        if not isinstance(payload, Mapping):
+            raise LaneConfigError("Lane config must be an object")
+        return cls(
+            video_id=str(payload["video_id"]) if payload.get("video_id") else None,
+            lanes=_parse_named(payload.get("lanes"), kind="lanes"),
+            zones=_parse_named(payload.get("zones"), kind="zones"),
+            source=source,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to the per-video lane JSON shape."""
+        return {
+            "video_id": self.video_id,
+            "lanes": [
+                {"id": lane.id, "polygon": [list(pt) for pt in lane.polygon]}
+                for lane in self.lanes
+            ],
+            "zones": [
+                {"id": zone.id, "polygon": [list(pt) for pt in zone.polygon]}
+                for zone in self.zones
+            ],
+        }
+
+    @classmethod
     def from_path(cls, path: str | Path) -> LaneAssigner:
         """Load ``configs/lanes/<video_id>.json`` (or any explicit JSON path)."""
         dest = Path(path)
@@ -93,12 +124,7 @@ class LaneAssigner:
             raise LaneConfigError(f"Invalid lane JSON: {dest} ({exc})") from exc
         if not isinstance(payload, dict):
             raise LaneConfigError(f"Lane config must be an object: {dest}")
-        return cls(
-            video_id=str(payload["video_id"]) if payload.get("video_id") else None,
-            lanes=_parse_named(payload.get("lanes"), kind="lanes"),
-            zones=_parse_named(payload.get("zones"), kind="zones"),
-            source=dest,
-        )
+        return cls.from_mapping(payload, source=dest)
 
     @classmethod
     def discover(

@@ -84,3 +84,14 @@ def test_discover_returns_none_when_missing(tmp_path: Path) -> None:
     found = LaneAssigner.discover("clip", lanes_dir=tmp_path)
     assert found is not None
     assert found.assign_lane(10, 10) == "lane_1"
+
+
+def test_from_mapping_roundtrip() -> None:
+    payload = {
+        "video_id": "clip",
+        "lanes": [{"id": "lane_1", "polygon": [[0, 0], [10, 0], [10, 10], [0, 10]]}],
+        "zones": [],
+    }
+    assigner = LaneAssigner.from_mapping(payload)
+    assert assigner.to_dict()["lanes"][0]["id"] == "lane_1"
+    assert assigner.assign_lane(2, 2) == "lane_1"
