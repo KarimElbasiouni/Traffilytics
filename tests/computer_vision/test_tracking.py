@@ -6,7 +6,7 @@ import pytest
 
 from computer_vision.detection.types import Detection
 from computer_vision.tracking.bytetrack import detections_to_results
-from computer_vision.tracking.tracker import VehicleTracker
+from computer_vision.tracking.tracker import VehicleTracker, ingested_frame_order
 from computer_vision.tracking.types import TrackedDetection
 
 
@@ -63,6 +63,27 @@ def test_vehicle_tracker_uses_injected_backend() -> None:
     assert {t.track_id for t in tracked} == {1}
     assert [t.frame for t in tracked] == [0, 1, 2]
     assert tracked[0].detection.center_x == pytest.approx(10.0)
+
+
+def test_ingested_frame_order_keeps_stride_without_empty_holes() -> None:
+    assert ingested_frame_order({0: [], 2: [], 4: []}) == [0, 2, 4]
+    assert ingested_frame_order({0: [], 1: [], 2: []}) == [0, 1, 2]
+    assert ingested_frame_order({0: [], 1: [], 3: []}) == [0, 1, 2, 3]
+
+
+def test_vehicle_tracker_skips_uningested_stride_frames() -> None:
+    class _Recorder:
+        def __init__(self) -> None:
+            self.calls: list[int | None] = []
+
+        def update(self, detections: list[Detection]) -> list[TrackedDetection]:
+            self.calls.append(detections[0].frame if detections else None)
+            return [TrackedDetection(detection=d, track_id=1) for d in detections]
+
+    dets = [_box(frame=i, cx=10.0) for i in (0, 2, 4)]
+    backend = _Recorder()
+    VehicleTracker(backend=backend).track(dets)
+    assert backend.calls == [0, 2, 4]
 
 
 def test_bytetrack_keeps_one_id_for_a_moving_vehicle() -> None:

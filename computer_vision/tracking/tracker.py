@@ -42,13 +42,31 @@ class VehicleTracker:
         return self._backend.update(list(detections))
 
     def track(self, detections: Sequence[Detection]) -> list[TrackedDetection]:
-        """Walk frames in order (including empty ones between min and max)."""
+        """Walk ingested frames in order.
+
+        Consecutive source indices with a hole (no detections that frame) still
+        get an empty ``update`` so lost tracks can age. A regular stride (every
+        2nd source frame) does **not** insert the skipped indices — those frames
+        were never ingested, and empty ByteTrack updates on them drop IDs.
+        """
         if not detections:
             return []
         by_frame: dict[int, list[Detection]] = {}
         for det in detections:
             by_frame.setdefault(det.frame, []).append(det)
         out: list[TrackedDetection] = []
-        for frame in range(min(by_frame), max(by_frame) + 1):
+        for frame in ingested_frame_order(by_frame):
             out.extend(self.update_tracks(by_frame.get(frame, [])))
         return out
+
+
+def ingested_frame_order(by_frame: Mapping[int, Any]) -> list[int]:
+    """Frame numbers to feed the tracker, without fake holes from ingest stride."""
+    keys = sorted(by_frame)
+    if len(keys) < 2:
+        return keys
+    deltas = [b - a for a, b in zip(keys, keys[1:])]
+    step = min(deltas)
+    if step > 1 and all(delta % step == 0 for delta in deltas):
+        return keys
+    return list(range(keys[0], keys[-1] + 1))
