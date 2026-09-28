@@ -196,6 +196,31 @@ Reads `trajectories.json` and writes `analytics.json` (flow, flow–density, bot
 
 `--dry-run` only checks the trajectories file. Optional LC/TTC (`analytics/micro/`) is not implemented.
 
+### API + dashboard (Epic 5)
+
+The dashboard is a **Vite + React SPA**. FastAPI remains the only backend (no Next.js).
+
+```bash
+pip install -e ".[api]"
+# Terminal 1 — API + worker
+python scripts/run_api.py --host 127.0.0.1 --port 8000
+# Terminal 2 — UI with hot reload (proxies /api to port 8000)
+cd frontend && npm install && npm run dev
+```
+
+Open [http://127.0.0.1:5173/](http://127.0.0.1:5173/). For a single-process demo, build the SPA and let FastAPI serve `frontend/dist`:
+
+```bash
+cd frontend && npm run build
+python scripts/run_api.py --host 127.0.0.1 --port 8000
+```
+
+Then open [http://127.0.0.1:8000/](http://127.0.0.1:8000/). OpenAPI is at `/docs`. `POST /api/v1/videos` returns a `job_id` immediately; a worker runs ingest → detect → track → analytics → SQLite persist.
+
+The default DB is `sqlite:///./data/traffilytics.db` (`DB_URL` in `.env`). Detection still needs `models/your_obb.pt`. To load CLI artifacts, copy `trajectories.json` into `data/processed/<video_id>/` and use **Re-process this clip** (or `POST .../process` with `{"reuse_artifacts": true}`).
+
+Lane polygons are stored with `PUT /api/v1/videos/{video_id}/lanes` and written to `configs/lanes/<video_id>.json`.
+
 ## Licences and attribution
 
 ### Traffilytics — AGPL-3.0
