@@ -66,5 +66,5 @@ models/configs/uav_obb_data.yaml
 .DS_Store
 Thumbs.db
 
-# Jupyter
-.ipynb_checkpoints/
+# Node
+node_modules/
