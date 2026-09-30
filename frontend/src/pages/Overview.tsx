@@ -209,8 +209,12 @@ function OverviewBody({ clip }: { clip: string }) {
             speedLabel={units.speed || "px/s"}
           />
           <p className="chart-caption">
-            Pixel speed includes camera motion on a moving drone. Use occupancy (right) for how
-            busy the frame is.
+            Window volume (veh/min) and mean speed. Use occupancy (right) for how busy the frame
+            is.
+          </p>
+          <p className="widget-note">
+            Camera motion (drone translation, pan, or zoom) can inflate or distort these values.
+            Treat volume and speed as scene-relative, not ground truth.
           </p>
         </article>
         <article className="card">
@@ -233,10 +237,7 @@ function OverviewBody({ clip }: { clip: string }) {
             <span>{activeId != null ? `#${activeId}` : "—"}</span>
           </header>
           <MiniPath track={selected} />
-          <p className="chart-caption">
-            Pixel path of one track. On a moving drone this mixes vehicle motion with camera
-            motion — use it to inspect identity, not ground position.
-          </p>
+          <p className="chart-caption">Pixel path of one generated track.</p>
           <dl className="facts">
             <div>
               <dt>Type</dt>
@@ -270,6 +271,10 @@ function OverviewBody({ clip }: { clip: string }) {
           ) : (
             <p className="note">{imb.data?.imbalance.note || "Lane polygons not configured."}</p>
           )}
+          <p className="widget-note">
+            Camera motion can shift paths in the frame, so this trajectory can mix vehicle motion
+            with drone movement. Use it to inspect identity, not ground position.
+          </p>
         </article>
         <article className="card">
           <header>
