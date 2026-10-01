@@ -1,3 +1,10 @@
+/**
+ * Traffilytics dashboard stylesheet (single sheet, no utility kit).
+ *
+ * Tokens: paper/sheet daylight, orange/teal/amber accents, Overpass.
+ * Layout: `.shell` rail + `.stage` title bar + `.plot`. Console, charts,
+ * upload intake, and pipeline dialog live in this file.
+ */
 :root {
   --bg: #f4f5f2;
   --bg-2: #eceee9;

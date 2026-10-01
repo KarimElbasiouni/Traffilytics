@@ -1,3 +1,9 @@
+/**
+ * JSON shapes returned by the Traffilytics API.
+ *
+ * Mirror backend payloads; keep fields optional when the worker may omit
+ * them. `Units` is the provenance for speed/density — pixel vs ground scale.
+ */
 export type Units = {
   speed?: string;
   density?: string;

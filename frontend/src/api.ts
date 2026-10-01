@@ -1,3 +1,10 @@
+/**
+ * Typed fetch client for FastAPI `/api/v1`.
+ *
+ * Failures become `ApiError` (code + message). Do not swallow HTTP errors
+ * here — pages decide how to show them. Binary URLs (`frame`, `overlay`)
+ * are strings for `<img>` / `<video>`, not JSON.
+ */
 import type {
   BottleneckPayload,
   EventRow,

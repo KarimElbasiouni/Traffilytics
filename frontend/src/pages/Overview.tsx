@@ -1,3 +1,10 @@
+/**
+ * Overview console for one processed clip.
+ *
+ * Loads overview, flow windows, events, vehicles, map tracks, plus optional
+ * bottleneck/imbalance. KPIs and figures stay scene-relative: show units and
+ * pixel-based caveats; do not invent ground-truth speeds.
+ */
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api";

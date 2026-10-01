@@ -1,3 +1,9 @@
+/**
+ * SPA entry: React Query, router, clip context, and station routes.
+ *
+ * Real pages are `/` (Overview) and `/upload`. Older analytics paths redirect
+ * to Overview so bookmarks still land on the console.
+ */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";

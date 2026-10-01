@@ -1,3 +1,11 @@
+/**
+ * Hand-drawn SVG figures for Overview (no chart library).
+ *
+ * Exports: class colors, `TimeSeriesPlot`, `DualLinePlot`, `Donut`, `Compass`,
+ * `PlanView`, `Heatmap`, `MiniPath`. Pointer pick + `ChartTip` are shared
+ * helpers. Color is never the only cue — captions and numeric tips sit with
+ * each plot on the page.
+ */
 import { useId, useState, type PointerEvent } from "react";
 import type { HeatCell, MapPoint, MapTrack } from "./types";
 

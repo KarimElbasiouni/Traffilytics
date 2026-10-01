@@ -1,3 +1,9 @@
+/**
+ * Shell: left chainage (Overview / Upload), title bar, clip picker, outlet.
+ *
+ * Nav links keep `?clip=` so switching stations does not drop the selection.
+ * This is layout only — no authorization.
+ */
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "./api";

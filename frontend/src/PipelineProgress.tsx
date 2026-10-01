@@ -1,3 +1,10 @@
+/**
+ * Modal that follows a processing job through `PIPELINE_STAGES`.
+ *
+ * Fill is interpolated from the worker `stage` (not a fake 0–100 from the
+ * API). `PipelineRail` is the stage dots; the list below is the same stages
+ * with timestamps. Escape or backdrop click closes.
+ */
 import { useEffect, useRef, useState } from "react";
 import type { JobRow } from "./types";
 import { PIPELINE_STAGES, type PipelineStage } from "./pipeline";

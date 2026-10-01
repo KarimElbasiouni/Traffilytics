@@ -1,3 +1,10 @@
+/**
+ * Selected clip and latest job id for the dashboard session.
+ *
+ * Clip id lives in `?clip=` (and localStorage). Job id is local only.
+ * `NeedClip` is the empty-state gate for Overview: no metrics until a clip
+ * is chosen.
+ */
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 

@@ -1,3 +1,9 @@
+/**
+ * Upload station: drop a video, enqueue processing, pick an existing clip.
+ *
+ * The POST returns immediately with `video_id` / `job_id`. Detection runs in
+ * a worker; this page only polls `GET /jobs/:id` and opens `PipelineProgress`.
+ */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState, type DragEvent } from "react";
 import { useNavigate } from "react-router-dom";
