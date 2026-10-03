@@ -934,10 +934,36 @@ textarea { width: 100%; min-height: 12rem; }
   padding: 0.7rem 1rem;
   border-radius: 0.75rem;
 }
+.path-or {
+  margin: 0;
+  text-align: center;
+  color: var(--mute);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+.path-or::before,
+.path-or::after {
+  content: "";
+  display: inline-block;
+  width: 2.5rem;
+  height: 1px;
+  margin: 0 0.55rem;
+  vertical-align: middle;
+  background: var(--line);
+}
 .clips-card header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.clips-card header p {
+  margin: 0.2rem 0 0;
+  color: var(--mute);
+  font-size: 0.82rem;
+  font-weight: 500;
 }
 .clips-card tr[data-on="true"] td { background: #fff4ee; }
 

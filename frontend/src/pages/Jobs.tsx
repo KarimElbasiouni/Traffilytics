@@ -129,8 +129,8 @@ export function JobsPage() {
           <div>
             <h2>Upload a clip</h2>
             <p>
-              The server answers immediately with a job id. Detection and tracking run in a worker,
-              not inside this page.
+              Add overhead footage of a traffic intersection, or pick a clip that is already on this
+              site from the list below. Analysis starts after you upload.
             </p>
           </div>
         </header>
@@ -193,15 +193,22 @@ export function JobsPage() {
 
           <button type="submit" className="intake-go" disabled={!file || upload.isPending}>
             <UploadIcon />
-            {upload.isPending ? "Uploading" : "Upload and enqueue"}
+            {upload.isPending ? "Uploading" : "Upload and analyze"}
           </button>
           {msg ? <p className="err">{msg}</p> : null}
         </form>
       </article>
 
+      <p className="path-or" role="separator">
+        or use an existing clip
+      </p>
+
       <article className="card clips-card">
         <header>
-          <h2>Clips</h2>
+          <div>
+            <h2>Existing clips</h2>
+            <p>Click a name to select it. Overview uses the selected clip.</p>
+          </div>
           <button type="button" className="quiet" disabled={!clip || reprocess.isPending} onClick={() => reprocess.mutate()}>
             Re-process selected
           </button>
@@ -209,7 +216,7 @@ export function JobsPage() {
         {videos.isError ? (
           <p className="err">{(videos.error as Error).message}</p>
         ) : !videos.data?.videos.length ? (
-          <p className="note">No clips in the database yet.</p>
+          <p className="note">None on this site yet. Upload a video above.</p>
         ) : (
           <table>
             <thead>
