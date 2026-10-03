@@ -217,6 +217,12 @@ python scripts/run_api.py --host 127.0.0.1 --port 8000
 
 Then open [http://127.0.0.1:8000/](http://127.0.0.1:8000/). OpenAPI is at `/docs`. `POST /api/v1/videos` returns a `job_id` immediately; a worker runs ingest → detect → track → analytics → SQLite persist.
 
+### Public site
+
+One process, no containers. [`render.yaml`](render.yaml) is the blueprint: install the API extra, build the dashboard, then download `models/your_obb.pt` and the finished `test_video2` clip from the [obb-v1 release](https://github.com/KarimElbasiouni/Traffilytics/releases/tag/obb-v1). On a host that sets `PORT`, `python scripts/run_api.py` listens on `0.0.0.0`.
+
+`test_video2` is a short finished clip so the dashboard is not empty. It is not a stabilized shot. The Overview notes on camera motion still apply.
+
 ### Demo account
 
 Both dashboard URLs open a log-in page before Overview and Upload. Use:

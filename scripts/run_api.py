@@ -11,6 +11,7 @@ API docs:  http://127.0.0.1:8000/docs
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -21,8 +22,13 @@ if str(_REPO_ROOT) not in sys.path:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Serve Traffilytics API and dashboard")
-    parser.add_argument("--host", default="127.0.0.1")
-    parser.add_argument("--port", type=int, default=8000)
+    # A platform sets PORT and expects the process on 0.0.0.0. Local runs stay on localhost.
+    if os.environ.get("PORT") and not os.environ.get("HOST"):
+        default_host = "0.0.0.0"
+    else:
+        default_host = os.environ.get("HOST", "127.0.0.1")
+    parser.add_argument("--host", default=default_host)
+    parser.add_argument("--port", type=int, default=int(os.environ.get("PORT", "8000")))
     parser.add_argument("--reload", action="store_true")
     args = parser.parse_args(argv)
 
