@@ -2,6 +2,36 @@
 
 AI Traffic Intelligence Platform: modular video ingestion, trained OBB detection, multi-object tracking, trajectory generation, analytics, APIs, and an interactive dashboard.
 
+## Run it locally
+
+The weights and a finished clip are on the [obb-v1 release](https://github.com/KarimElbasiouni/Traffilytics/releases/tag/obb-v1). The database is inside that clip archive. You do not need to download the UAV-OBB training set to open the dashboard.
+
+```bash
+git clone https://github.com/KarimElbasiouni/Traffilytics.git
+cd Traffilytics
+conda create -n traffilytics python=3.10 pip -y
+conda activate traffilytics
+pip install -e ".[api]"
+bash scripts/fetch_public_assets.sh
+cd frontend && npm ci && npm run build && cd ..
+python scripts/run_api.py
+```
+
+Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/) and log in with `admin101` / `admin123`. The clip `test_video2` is already processed.
+
+`fetch_public_assets.sh` downloads `models/your_obb.pt` and `demo-test_video2.tar.gz` when those files are missing. Node is required for the dashboard build.
+
+To upload a new video and run detection, install CPU PyTorch and the ML extra before starting the API:
+
+```bash
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+pip install -e ".[api,ml]"
+```
+
+Use a CUDA PyTorch build on a GPU machine instead of the CPU index above. The rest of this file covers dataset download, training, and the individual pipeline scripts.
+
+To try an upload, download [test_video1.mp4](https://github.com/KarimElbasiouni/Traffilytics/releases/download/obb-v1/test_video1.mp4) (62 MB, a UAV-OBB demo clip) and drop it on the Upload page.
+
 **UAV-OBB** ([Mendeley Data](https://data.mendeley.com/datasets/6snrjwcpkh/3), CC BY 4.0) is the training and evaluation dataset. At runtime Traffilytics processes **user-uploaded video**; the dataset's bundled MP4 clips serve as demo and sanity-check footage. UAV-OBB ships no ground-truth trajectories, so trajectories always come from Traffilytics' own detector and tracker.
 
 Full design docs live under [`docs/`](docs/).
@@ -216,12 +246,6 @@ python scripts/run_api.py --host 127.0.0.1 --port 8000
 ```
 
 Then open [http://127.0.0.1:8000/](http://127.0.0.1:8000/). OpenAPI is at `/docs`. `POST /api/v1/videos` returns a `job_id` immediately; a worker runs ingest → detect → track → analytics → SQLite persist.
-
-### Public site
-
-One process, no containers. [`render.yaml`](render.yaml) is the blueprint: install the API extra, build the dashboard, then download `models/your_obb.pt` and the finished `test_video2` clip from the [obb-v1 release](https://github.com/KarimElbasiouni/Traffilytics/releases/tag/obb-v1). On a host that sets `PORT`, `python scripts/run_api.py` listens on `0.0.0.0`.
-
-`test_video2` is a short finished clip so the dashboard is not empty. It is not a stabilized shot. The Overview notes on camera motion still apply.
 
 ### Demo account
 
