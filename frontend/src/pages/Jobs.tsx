@@ -35,6 +35,7 @@ export function JobsPage() {
   const [hold, setHold] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [over, setOver] = useState(false);
+  const [intakeOpen, setIntakeOpen] = useState(false);
 
   const videos = useQuery({ queryKey: ["videos"], queryFn: api.videos });
   const job = useQuery({
@@ -90,13 +91,27 @@ export function JobsPage() {
     },
   });
 
+  const rows = videos.data?.videos ?? [];
+  const demos = [...rows].sort((a, b) => {
+    const ac = a.status === "completed" ? 0 : 1;
+    const bc = b.status === "completed" ? 0 : 1;
+    if (ac !== bc) return ac - bc;
+    return (a.video_id || "").localeCompare(b.video_id || "");
+  });
+
+  const openClip = (id: string) => {
+    setClip(id);
+    navigate(`/?clip=${encodeURIComponent(id)}`);
+  };
+
   const reprocess = useMutation({
-    mutationFn: () => api.process(clip),
+    mutationFn: (id: string) => api.process(id),
     onMutate: () => {
       setWatch(true);
       setHold(true);
     },
     onSuccess: (data) => {
+      setClip(data.video_id);
       setJobId(data.job_id);
       setHold(false);
     },
@@ -106,6 +121,9 @@ export function JobsPage() {
       setMsg(err.message);
     },
   });
+
+  const empty = !videos.isPending && !demos.length;
+  const showIntake = intakeOpen || empty;
 
   return (
     <div className="upload-page">
@@ -121,102 +139,120 @@ export function JobsPage() {
         />
       ) : null}
 
-      <article className="intake">
-        <header className="intake-head">
-          <span className="intake-badge" aria-hidden="true">
-            <CloudIcon />
-          </span>
-          <div>
-            <h2>Upload a clip</h2>
-            <p>
-              Add overhead footage of a traffic intersection, or pick a clip that is already on this
-              site from the list below. Analysis starts after you upload.
-            </p>
-          </div>
-        </header>
+      {videos.isError ? <p className="err">{(videos.error as Error).message}</p> : null}
 
-        <form
-          className="intake-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            upload.mutate();
-          }}
-        >
-          <input
-            ref={fileRef}
-            className="sr-only"
-            type="file"
-            accept={ACCEPT.join(",")}
-            onChange={(e) => takeFile(e.target.files?.[0] ?? null)}
-          />
-          <button
-            type="button"
-            className="dropzone"
-            data-over={over ? "true" : "false"}
-            onClick={() => fileRef.current?.click()}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setOver(true);
-            }}
-            onDragLeave={() => setOver(false)}
-            onDrop={onDrop}
-          >
-            <CloudIcon />
-            <strong>Drag and drop your video file here</strong>
-            <span>or click to browse</span>
-            <small>MP4, MOV, AVI, MKV</small>
-          </button>
+      {!empty ? (
+      <button
+        type="button"
+        className="intake-toggle"
+        aria-expanded={showIntake}
+        onClick={() => setIntakeOpen((v) => !v)}
+      >
+        <span className="intake-badge" aria-hidden="true">
+          <CloudIcon />
+        </span>
+        <span className="intake-toggle-copy">
+          <strong>Have your own footage? Upload a clip</strong>
+          <small>MP4, MOV, AVI, or MKV. Analysis starts after you upload.</small>
+        </span>
+        <span className="chevron" aria-hidden="true">
+          <ChevronIcon />
+        </span>
+      </button>
+      ) : null}
 
-          {file ? (
-            <div className="file-chip">
-              <span className="file-glyph" aria-hidden="true">
-                <FileIcon />
-              </span>
-              <div>
-                <b>{file.name}</b>
-                <small>{fmtSize(file.size)}</small>
-              </div>
-              <button type="button" className="pipe-x" onClick={() => takeFile(null)} aria-label="Remove file">
-                ×
-              </button>
+      {showIntake ? (
+        <article className="intake">
+          <header className="intake-head">
+            <div>
+              <h2>Upload a clip</h2>
+              <p>Add overhead footage of a traffic intersection.</p>
             </div>
-          ) : null}
-
-          <label>
-            Site label (optional)
+          </header>
+          <form
+            className="intake-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              upload.mutate();
+            }}
+          >
             <input
-              value={site}
-              onChange={(e) => setSite(e.target.value)}
-              placeholder="arterial_north"
+              ref={fileRef}
+              className="sr-only"
+              type="file"
+              accept={ACCEPT.join(",")}
+              onChange={(e) => takeFile(e.target.files?.[0] ?? null)}
             />
-          </label>
+            <button
+              type="button"
+              className="dropzone"
+              data-over={over ? "true" : "false"}
+              onClick={() => fileRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setOver(true);
+              }}
+              onDragLeave={() => setOver(false)}
+              onDrop={onDrop}
+            >
+              <CloudIcon />
+              <strong>Drag and drop your video file here</strong>
+              <span>or click to browse</span>
+              <small>MP4, MOV, AVI, MKV</small>
+            </button>
 
-          <button type="submit" className="intake-go" disabled={!file || upload.isPending}>
-            <UploadIcon />
-            {upload.isPending ? "Uploading" : "Upload and analyze"}
-          </button>
-          {msg ? <p className="err">{msg}</p> : null}
-        </form>
-      </article>
+            {file ? (
+              <div className="file-chip">
+                <span className="file-glyph" aria-hidden="true">
+                  <FileIcon />
+                </span>
+                <div>
+                  <b>{file.name}</b>
+                  <small>{fmtSize(file.size)}</small>
+                </div>
+                <button type="button" className="pipe-x" onClick={() => takeFile(null)} aria-label="Remove file">
+                  ×
+                </button>
+              </div>
+            ) : null}
 
-      <p className="path-or" role="separator">
-        or use an existing clip
-      </p>
+            <label>
+              Site label (optional)
+              <input
+                value={site}
+                onChange={(e) => setSite(e.target.value)}
+                placeholder="arterial_north"
+              />
+            </label>
+
+            <button type="submit" className="intake-go" disabled={!file || upload.isPending}>
+              <UploadIcon />
+              {upload.isPending ? "Uploading" : "Upload and analyze"}
+            </button>
+            {msg ? <p className="err">{msg}</p> : null}
+          </form>
+        </article>
+      ) : null}
 
       <article className="card clips-card">
         <header>
           <div>
             <h2>Existing clips</h2>
-            <p>Click a name to select it. Overview uses the selected clip.</p>
+            <p>Click a name to select it, or open a finished clip on Overview.</p>
           </div>
-          <button type="button" className="quiet" disabled={!clip || reprocess.isPending} onClick={() => reprocess.mutate()}>
+          <button
+            type="button"
+            className="quiet"
+            disabled={!clip || reprocess.isPending}
+            onClick={() => reprocess.mutate(clip)}
+          >
             Re-process selected
           </button>
         </header>
-        {videos.isError ? (
-          <p className="err">{(videos.error as Error).message}</p>
-        ) : !videos.data?.videos.length ? (
-          <p className="note">None on this site yet. Upload a video above.</p>
+        {videos.isPending && !demos.length ? (
+          <p className="note">Loading clips…</p>
+        ) : !demos.length ? (
+          <p className="note">No clips on this site yet. Upload a video above.</p>
         ) : (
           <table>
             <thead>
@@ -226,10 +262,11 @@ export function JobsPage() {
                 <th>site</th>
                 <th>size</th>
                 <th>duration</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
-              {videos.data.videos.map((v) => (
+              {demos.map((v) => (
                 <tr key={v.video_id} data-on={v.video_id === clip ? "true" : "false"}>
                   <td>
                     <button type="button" className="quiet" onClick={() => setClip(v.video_id)}>
@@ -240,6 +277,16 @@ export function JobsPage() {
                   <td>{v.site || "—"}</td>
                   <td>{v.resolution || "—"}</td>
                   <td>{v.duration != null ? `${v.duration.toFixed(1)} s` : "—"}</td>
+                  <td>
+                    <button
+                      type="button"
+                      className="open-clip"
+                      disabled={v.status !== "completed"}
+                      onClick={() => openClip(v.video_id)}
+                    >
+                      Open in Overview
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -269,6 +316,14 @@ function FileIcon() {
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
       <path d="M7 3h7l5 5v13H7z" fill="none" stroke="currentColor" strokeWidth="1.7" />
       <path d="M14 3v5h5" fill="none" stroke="currentColor" strokeWidth="1.7" />
+    </svg>
+  );
+}
+
+function ChevronIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+      <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="1.8" />
     </svg>
   );
 }
