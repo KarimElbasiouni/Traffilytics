@@ -109,6 +109,8 @@ def test_query_endpoints_after_persist(client, db) -> None:
     payload = report.json()
     assert payload["findings"]
     assert "AGPL" in payload["attribution"]["licence"]
+    assert payload["attribution"]["release_tag"] == "obb-v1"
+    assert payload["attribution"]["weights_url"].endswith("/your_obb.pt")
 
     vehicles = client.get("/api/v1/videos/clip/vehicles")
     assert vehicles.status_code == 200

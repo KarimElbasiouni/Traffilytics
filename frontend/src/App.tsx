@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "./api";
 import { useAuth } from "./auth";
 import { useClip } from "./clip";
+import { SourceOffer } from "./legal";
 
 const NAV = [
   { to: "/", label: "Overview", icon: IconGrid, end: true },
@@ -45,7 +46,7 @@ export function App() {
             </NavLink>
           ))}
         </nav>
-        <p className="rail-foot">UAV-OBB · AGPL-3.0</p>
+        <SourceOffer />
       </aside>
       <div className="stage">
         <header className="topbar">

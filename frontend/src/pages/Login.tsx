@@ -5,6 +5,7 @@ import { useState, type FormEvent } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth";
 import { BrandMark } from "../App";
+import { SourceOffer } from "../legal";
 
 export function LoginPage() {
   const { user, login } = useAuth();
@@ -87,6 +88,7 @@ export function LoginPage() {
             Log in
           </button>
         </form>
+        <SourceOffer />
       </main>
     </div>
   );

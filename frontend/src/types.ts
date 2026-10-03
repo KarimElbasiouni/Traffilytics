@@ -126,7 +126,15 @@ export type ReportPayload = {
     n_events?: number;
   };
   findings?: string[];
-  attribution?: { uav_obb?: string; licence?: string };
+  attribution?: {
+    uav_obb?: string;
+    licence?: string;
+    source_commit?: string;
+    source_commit_url?: string;
+    release_tag?: string;
+    release_url?: string;
+    weights_url?: string;
+  };
 };
 
 export type VehicleRow = {

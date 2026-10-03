@@ -2,9 +2,27 @@
 
 from __future__ import annotations
 
+import subprocess
 from typing import Any, Mapping
 
 from backend.database.models import Video, utc_now_iso
+
+_REPO = "https://github.com/KarimElbasiouni/Traffilytics"
+_OBB_V1 = "1100b33da026c692a5595b3628cf5d5c75a3366e"
+_WEIGHTS_URL = f"{_REPO}/releases/download/obb-v1/your_obb.pt"
+
+
+def _source_commit() -> str:
+    """Commit of this checkout. Falls back to the obb-v1 tag when git is absent."""
+    try:
+        sha = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+    except (OSError, subprocess.CalledProcessError):
+        return _OBB_V1
+    return sha or _OBB_V1
 
 
 def build_report(video: Video, analytics: Mapping[str, Any]) -> dict[str, Any]:
@@ -73,6 +91,11 @@ def build_report(video: Video, analytics: Mapping[str, Any]) -> dict[str, Any]:
                 "Imagery shown from that dataset must carry this citation."
             ),
             "licence": "Traffilytics is AGPL-3.0-only.",
+            "source_commit": _source_commit(),
+            "source_commit_url": f"{_REPO}/commit/{_source_commit()}",
+            "release_tag": "obb-v1",
+            "release_url": f"{_REPO}/releases/tag/obb-v1",
+            "weights_url": _WEIGHTS_URL,
         },
     }
 

@@ -17,6 +17,7 @@ import {
   TimeSeriesPlot,
 } from "../charts";
 import { NeedClip, useClip } from "../clip";
+import { DatasetCitation } from "../legal";
 import type { EventRow, FlowWindow, MapTrack } from "../types";
 
 function fmt(n: number | null | undefined, digits = 1) {
@@ -134,6 +135,7 @@ function OverviewBody({ clip }: { clip: string }) {
             Each box is a detection on that frame. A track id is shown when the
             tracker kept the vehicle; untracked detections are still boxed.
           </p>
+          <DatasetCitation />
           {overlayFailed ? (
             <p className="note">
               Overlay video is still building or this clip has no ingested frames. Re-process

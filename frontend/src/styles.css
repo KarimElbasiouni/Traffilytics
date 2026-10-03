@@ -104,11 +104,21 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
   background: #fff4ee;
   box-shadow: inset 3px 0 0 var(--orange);
 }
-.rail-foot {
+.source-offer {
   margin-top: auto;
+  display: grid;
+  gap: 0.28rem;
   color: var(--mute);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
   padding: 0 0.55rem;
+}
+.source-offer p { margin: 0 0 0.15rem; }
+.source-offer a { color: var(--teal); }
+.dataset-cite {
+  margin: 0.35rem 0 0;
+  color: var(--mute);
+  font-size: 0.82rem;
 }
 
 .stage { min-width: 0; display: grid; grid-template-rows: auto 1fr; }
@@ -1070,7 +1080,7 @@ th { color: var(--mute); font-weight: 600; }
   .hero { grid-template-areas: "plan" "events" "side"; }
   .rail { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; }
   .rail nav { display: flex; }
-  .rail-foot { display: none; }
+  .source-offer { width: 100%; margin-top: 0.5rem; }
 }
 
 .sign-out {
@@ -1100,6 +1110,10 @@ th { color: var(--mute); font-weight: 600; }
 }
 .gate-plot {
   width: min(22rem, 100%);
+}
+.gate-plot .source-offer {
+  margin-top: 1rem;
+  padding: 0;
 }
 .login-form {
   width: 100%;
