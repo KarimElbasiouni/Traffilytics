@@ -5,6 +5,7 @@
  * The demo log-in gate lives in the router; this shell does not call the API
  * with credentials.
  */
+import { useEffect } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "./api";
@@ -23,6 +24,11 @@ export function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const videos = useQuery({ queryKey: ["videos"], queryFn: api.videos });
+  useEffect(() => {
+    if (!clip || !videos.isSuccess || videos.isFetching) return;
+    const known = (videos.data.videos || []).some((v) => v.video_id === clip);
+    if (!known) setClip("");
+  }, [clip, setClip, videos.isSuccess, videos.isFetching, videos.data]);
   const page =
     NAV.find((item) => (item.end ? location.pathname === item.to : location.pathname.startsWith(item.to)))
       ?.label || "Overview";
