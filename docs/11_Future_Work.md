@@ -51,7 +51,7 @@ Work beyond the MVP, consistent with Traffilytics as a **full platform** and UAV
 - Upload quotas, retention policies, and deletion for user video
 - Export (CSV, GeoJSON, PDF)
 - Alert webhooks (not emergency dispatch)
-- Production-grade Docker/K8s packaging, observability, audit logs
+- Observability and audit logs on the single-process host. Containers stay out of scope
 
 ---
 
@@ -81,7 +81,7 @@ Work beyond the MVP, consistent with Traffilytics as a **full platform** and UAV
 
 | Priority | Theme |
 |----------|--------|
-| Near-term after MVP | Tracker comparison write-up, dashboard polish, lane editor UX, Docker hardening |
+| Near-term after MVP | Tracker comparison write-up, dashboard polish, lane editor UX, public single-process host |
 | Medium-term | LLM insights, exports/alerts, deeper micro analytics, calibration workflow |
 | Long-term | Live feeds, multi-dataset adapters, geo maps, production multi-tenant ops |
 

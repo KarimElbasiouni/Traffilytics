@@ -33,7 +33,6 @@ traffilytics/
 │   └── lanes/                # per-video lane/zone polygons
 ├── models/                   # configs + trained weights
 ├── tests/
-├── docker/                   # Dockerfiles / compose
 └── docs/
 ```
 
@@ -114,16 +113,17 @@ UAV-OBB is an **external dataset** installed into `data/annotations/` (splits) a
 
 ---
 
-### Epic 6 — Packaging, Testing & Hardening
+### Epic 6 — Testing & Hardening
+
+The public site is one process: FastAPI serves the built dashboard, SQLite holds results, and the pipeline worker runs in that same process. There is no container image and no separate API, worker, database, or frontend service.
 
 | Issue | Description |
 |-------|-------------|
-| Dockerize services | API, worker, DB, frontend as modular deployables |
 | Detection/tracking tests | CPU-only harnesses; no dataset download in CI |
 | Analytics tests | Scenario checks |
 | Performance baselines | Runtime per clip; train notes |
 
-**Deliverables:** Deployable compose stack + test/benchmark docs.
+**Deliverables:** CPU test suite plus runtime and train notes. Hosting is a start command on a public URL, not a container stack.
 
 ---
 
@@ -139,7 +139,7 @@ nice-to-have — and the AGPL's network clause (§13) makes a hosted demo a trig
 | Model card | Architecture, training config, `valid`-split metrics, class map, and both notices (Ultralytics AGPL-3.0 + UAV-OBB CC BY 4.0) |
 | Corresponding-source offer | Deployed site links its exact commit, release tag, and weights so remote users can obtain the source (§13) |
 | Provenance manifest | Record dataset version (Mendeley V3), commit SHA, train config, and seeds that produced the weights (NFR-ACC-005) |
-| Notices in artifacts | Ship `LICENSE` inside Docker images and wheels; surface the UAV-OBB citation wherever its imagery appears in the UI (NFR-DOC-003) |
+| Notices in artifacts | Ship `LICENSE` with the source release and on the hosted site; surface the UAV-OBB citation wherever its imagery appears in the UI (NFR-DOC-003) |
 
 **Deliverables:** A public, citable weights release plus a deployment that satisfies AGPL-3.0 §13.
 
@@ -153,7 +153,7 @@ Epic 1 (Video pipeline + UAV-OBB layout)
     → Epic 3 (Track + generate trajectories + lanes + diagnostics)
       → Epic 4 (Analytics + insights)
         → Epic 5 (FastAPI + DB + upload/jobs + Dashboard + reports)
-          → Epic 6 (Docker + tests)
+          → Epic 6 (Tests + runtime notes)
             → Epic 7 (Weights release + AGPL-3.0 compliance)
 ```
 
@@ -172,7 +172,7 @@ Detector training is an offline GPU step and can run on a free hosted GPU; the r
 - [ ] Automated insights generated
 - [ ] Upload → job → results flow works without blocking requests
 - [ ] Results in DB, exposed via FastAPI, visible on dashboard
-- [ ] Reports available; app layout Docker-ready
+- [ ] Reports available; public site runs as one process (API, in-process worker, SQLite, static dashboard)
 - [ ] Trained weights published with a model card; any public deployment offers its corresponding source (AGPL-3.0 §13)
 
 ---

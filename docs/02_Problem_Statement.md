@@ -13,7 +13,7 @@ There is no lightweight, end-to-end platform that:
 3. **Integrates and evaluates** multi-object tracking and **generates** trajectories from that pipeline
 4. **Implements** custom analytics (flow, bottlenecks, imbalance, events) and automated insights
 5. **Persists** results and serves them through a backend API and interactive dashboard
-6. **Packages** the system as deployable software (e.g., Dockerized services)
+6. **Hosts** the dashboard on a public website, so a visitor can use it without installing anything
 
 UAV-OBB sharpens the gap rather than closing it. The dataset has no trajectories, no lane topology, and no world-scale calibration — only per-image oriented boxes. Everything temporal and spatial has to be produced by the platform: tracking turns detections into trajectories, user-defined polygons turn pixels into lanes and zones, and an optional scale turns pixel motion into physical speed. That gap is precisely what Traffilytics builds.
 

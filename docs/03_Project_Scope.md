@@ -32,7 +32,7 @@ The figures above describe the Mendeley **V3** release that `scripts/download_ua
 | Tracking integration + **own trajectory generation** | OpenCV, PyTorch, Ultralytics |
 | Analytics engine, bottleneck, imbalance, events | UAV-OBB imagery and OBB labels (CC BY 4.0) |
 | Lane/zone definition and scale calibration workflow | — |
-| Insights, dashboard, FastAPI, database, reports, Docker | — |
+| Insights, dashboard, FastAPI, database, reports, hosted single-process site | — |
 
 ---
 
@@ -65,7 +65,7 @@ The figures above describe the Mendeley **V3** release that `scripts/download_ua
 - Automated insight generation
 - Backend (e.g. FastAPI), persistent database, interactive dashboard, automated reports
 - Asynchronous job handling so uploads never block on inference
-- Modular deployment packaging (e.g. Dockerized services)
+- A public website visitors open in a browser. One host process: API, in-process worker, SQLite, and the built dashboard. No containers.
 
 ### Outputs
 
@@ -120,7 +120,7 @@ The MVP is complete when:
 5. Custom traffic metrics, bottlenecks, imbalance, and events are computed over user-defined lanes/zones
 6. Insights are generated
 7. Results are stored, served via backend API, and shown on an interactive dashboard
-8. The application is structured for modular deployment (e.g. Docker-ready layout)
+8. The site is reachable at a public URL as that single process, with demo results already loaded
 
 ## Future Expansion (Not MVP)
 

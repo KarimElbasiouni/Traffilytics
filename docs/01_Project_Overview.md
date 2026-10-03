@@ -26,7 +26,7 @@ UAV-OBB is a detection dataset and nothing more: still images and rotated boxes.
 | Analytics | None | Own engine: flow, density, bottleneck, imbalance, events |
 | Insights | None | Automated human-readable summaries |
 | Dashboard / API / DB / reports | None | Full web dashboard, backend (e.g. FastAPI), analytics DB, automated reports |
-| Deployment | Not applicable | Modular, deployable platform (e.g. Dockerized services) |
+| Deployment | Not applicable | Public website. One process: API, in-process worker, SQLite, static dashboard. No containers |
 
 ### What you are not reinventing
 

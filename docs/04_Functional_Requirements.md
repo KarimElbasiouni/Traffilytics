@@ -227,7 +227,7 @@ These are Traffilytics-owned features; they are not required to mirror any third
 |----|-------------|
 | FR-ML-001 | Training pipelines shall use PyTorch / YOLO training tooling on the UAV-OBB annotation splits. |
 | FR-ML-002 | Evaluation pipelines shall report detection metrics on the held-out UAV-OBB `valid` split and tracking diagnostics on video. |
-| FR-DEP-001 | The application shall be structured as modular, deployable services (e.g., Dockerized). |
+| FR-DEP-001 | The public site shall run as one process: FastAPI serves the built dashboard, SQLite holds results, and the pipeline worker runs in-process. No containers. |
 
 ---
 

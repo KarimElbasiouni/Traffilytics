@@ -69,7 +69,7 @@ Lane/zone polygons and the optional pixel-to-metre scale are configuration input
 | Persistence | Dedicated analytics database |
 | API | Backend service (e.g. FastAPI) |
 | Presentation | Interactive web dashboard + automated reports |
-| Deployment | Modular / Dockerized services |
+| Deployment | One public process: FastAPI, in-process worker, SQLite, static dashboard. No containers |
 | Non-focus | Video stabilization R&D |
 
 ## Data Flow Summary
@@ -117,7 +117,7 @@ Steps 3–8 run in a worker, not inside the upload request. Job status is polled
 | Lane & zone context | User-supplied polygons in configuration |
 | Units | Optional pixel-to-metre scale; pixel-based otherwise |
 | Backend | FastAPI (or equivalent) |
-| Deploy | Dockerized modular services |
+| Deploy | Single host process. FastAPI serves the built frontend; the worker is a thread in that process; SQLite is the database |
 
 ## Repository Mapping
 
@@ -132,7 +132,6 @@ Steps 3–8 run in a worker, not inside the upload request. Job status is polled
 | `models/` | Training configs + exported weights |
 | `tests/` | Detection eval, tracking diagnostics, analytics tests |
 | `docs/` | Platform documentation |
-| `docker/` (or compose) | Service packaging |
 
 ## Boundaries
 

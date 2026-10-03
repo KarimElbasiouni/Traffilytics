@@ -69,7 +69,7 @@ Non-functional requirements for Traffilytics as a **complete, deployable traffic
 | NFR-PORT-001 | Training and inference shall run with PyTorch; GPU optional but recommended for YOLO OBB training. |
 | NFR-PORT-002 | Video I/O shall use standard libraries (e.g., OpenCV) for MP4 and frame extraction. |
 | NFR-PORT-003 | Configuration (dataset paths, thresholds, lane/zone polygons, scale, model paths) shall be externalized. |
-| NFR-PORT-004 | Services shall be packageable with Docker (or equivalent) for reproducible deployment. |
+| NFR-PORT-004 | A public deployment shall start from the repo as one process (Python package plus the built frontend). Container images are out of scope. |
 
 ---
 
