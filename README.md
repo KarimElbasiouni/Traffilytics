@@ -242,7 +242,7 @@ This follows from Ultralytics YOLO, which drives OBB training and inference here
 
 ### Trained weights
 
-`models/your_obb.pt` is gitignored because git handles large binaries poorly, but it is **not** exempt from the above: publish it as a GitHub release or model repository alongside any public deployment. Weights derive from both an Ultralytics pretrained checkpoint (AGPL-3.0) and UAV-OBB imagery (CC BY 4.0), so a model card should carry both notices.
+`models/your_obb.pt` is gitignored because git handles large binaries poorly, but it is **not** exempt from the above: publish it as a GitHub release or model repository alongside any public deployment. Weights derive from both an Ultralytics pretrained checkpoint (AGPL-3.0) and UAV-OBB imagery (CC BY 4.0). The model card is [`docs/model_card.md`](docs/model_card.md); the run record is [`models/provenance.json`](models/provenance.json).
 
 ### UAV-OBB — CC BY 4.0
 

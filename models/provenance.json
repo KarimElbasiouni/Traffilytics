@@ -1,0 +1,71 @@
+{
+  "model_version": "obb_v1",
+  "weights": {
+    "path": "models/your_obb.pt",
+    "sha256": "3a6759dde2f889bccdbdfe3527d262af068ce096106cbe31b30c0f71d4a7a056",
+    "bytes": 6389016
+  },
+  "architecture": {
+    "framework": "Ultralytics",
+    "task": "obb",
+    "base_checkpoint": "yolov8n-obb.pt",
+    "imgsz": 640
+  },
+  "dataset": {
+    "name": "UAV-OBB",
+    "version": "Mendeley Data V3",
+    "doi": "10.17632/6snrjwcpkh.3",
+    "url": "https://doi.org/10.17632/6snrjwcpkh.3",
+    "licence": "CC BY 4.0",
+    "modifications": "None. Published images and labels were used as released. Training resized inputs to 640.",
+    "splits": {
+      "train": 1158,
+      "valid": 207,
+      "test": 10
+    },
+    "class_map": {
+      "0": "bike",
+      "1": "bus",
+      "2": "car",
+      "3": "other_vehicle",
+      "4": "taxi",
+      "5": "truck"
+    }
+  },
+  "training": {
+    "config": "models/configs/train_obb.yaml",
+    "run_dir": "models/runs/obb_v1",
+    "epochs": 50,
+    "patience": 20,
+    "batch": 8,
+    "imgsz": 640,
+    "optimizer": "auto",
+    "pretrained": true,
+    "seed": 0,
+    "deterministic": true,
+    "device": "cuda",
+    "source_commit": null,
+    "source_commit_note": "The Kaggle training run did not record a git SHA. The release tag that attaches these weights is the corresponding source."
+  },
+  "evaluation": {
+    "command": "python scripts/eval_obb.py --weights models/your_obb.pt",
+    "metrics_file": "models/runs/eval_obb/metrics.json",
+    "split": "valid",
+    "ultralytics_split_name": "val",
+    "n_images": 207,
+    "imgsz": 640,
+    "conf_threshold": 0.25,
+    "iou_threshold": 0.7,
+    "precision": 0.8536838003288586,
+    "recall": 0.8530679238398476,
+    "mAP50": 0.8375272910330774,
+    "mAP50-95": 0.6879079407419724,
+    "per_class": null,
+    "per_class_note": "metrics.json for this run did not include per-class mAP."
+  },
+  "licences": {
+    "weights": "AGPL-3.0-only",
+    "dataset": "CC BY 4.0",
+    "model_card": "docs/model_card.md"
+  }
+}
