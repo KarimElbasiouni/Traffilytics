@@ -5,7 +5,8 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
 
-python -m pip install -e ".[api]"
+python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+python -m pip install -e ".[api,ml]"
 
 if ! command -v npm >/dev/null 2>&1; then
   node_version="v22.13.1"
