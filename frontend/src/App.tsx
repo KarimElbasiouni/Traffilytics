@@ -2,11 +2,13 @@
  * Shell: left chainage (Overview / Upload), title bar, clip picker, outlet.
  *
  * Nav links keep `?clip=` so switching stations does not drop the selection.
- * This is layout only — no authorization.
+ * The demo log-in gate lives in the router; this shell does not call the API
+ * with credentials.
  */
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "./api";
+import { useAuth } from "./auth";
 import { useClip } from "./clip";
 
 const NAV = [
@@ -16,6 +18,8 @@ const NAV = [
 
 export function App() {
   const { clip, setClip } = useClip();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
   const videos = useQuery({ queryKey: ["videos"], queryFn: api.videos });
   const page =
@@ -46,21 +50,33 @@ export function App() {
       <div className="stage">
         <header className="topbar">
           <h1 className="page-title">{page}</h1>
-          <label className="clip-pick">
-            Site
-            <select
-              value={clip}
-              onChange={(e) => setClip(e.target.value)}
-              aria-label="Select a processed clip"
+          <div className="topbar-actions">
+            <label className="clip-pick">
+              Site
+              <select
+                value={clip}
+                onChange={(e) => setClip(e.target.value)}
+                aria-label="Select a processed clip"
+              >
+                <option value="">None selected</option>
+                {(videos.data?.videos || []).map((v) => (
+                  <option key={v.video_id} value={v.video_id}>
+                    {v.site || v.video_id}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              className="quiet sign-out"
+              onClick={() => {
+                logout();
+                navigate("/login", { replace: true });
+              }}
             >
-              <option value="">None selected</option>
-              {(videos.data?.videos || []).map((v) => (
-                <option key={v.video_id} value={v.video_id}>
-                  {v.site || v.video_id}
-                </option>
-              ))}
-            </select>
-          </label>
+              Log out
+            </button>
+          </div>
         </header>
         <main className="plot">
           <Outlet />
@@ -70,7 +86,7 @@ export function App() {
   );
 }
 
-function BrandMark() {
+export function BrandMark() {
   const cx = 16;
   const cy = 16;
   const rOuter = 15;
