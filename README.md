@@ -217,6 +217,17 @@ python scripts/run_api.py --host 127.0.0.1 --port 8000
 
 Then open [http://127.0.0.1:8000/](http://127.0.0.1:8000/). OpenAPI is at `/docs`. `POST /api/v1/videos` returns a `job_id` immediately; a worker runs ingest → detect → track → analytics → SQLite persist.
 
+### Demo account
+
+Both dashboard URLs open a log-in page before Overview and Upload. Use:
+
+| Field | Value |
+| --- | --- |
+| Username | `admin101` |
+| Password | `admin123` |
+
+The browser keeps that sign-in for the tab. API requests stay unauthenticated.
+
 The default DB is `sqlite:///./data/traffilytics.db` (`DB_URL` in `.env`). Detection still needs `models/your_obb.pt`. To load CLI artifacts, copy `trajectories.json` into `data/processed/<video_id>/` and use **Re-process this clip** (or `POST .../process` with `{"reuse_artifacts": true}`).
 
 Lane polygons are stored with `PUT /api/v1/videos/{video_id}/lanes` and written to `configs/lanes/<video_id>.json`.
