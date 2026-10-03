@@ -1,7 +1,7 @@
 /**
  * Traffilytics dashboard stylesheet (single sheet, no utility kit).
  *
- * Tokens: paper/sheet daylight, orange/teal/amber accents, Overpass.
+ * Tokens: paper/sheet daylight, orange/teal/amber accents, Satoshi.
  * Layout: `.shell` rail + `.stage` title bar + `.plot`. Console, charts,
  * upload intake, and pipeline dialog live in this file.
  */
@@ -23,7 +23,7 @@
   --blue: var(--orange);
   --violet: var(--orange-dark);
   --emerald: var(--green);
-  --font: Overpass, "Segoe UI", sans-serif;
+  --font: "Satoshi", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -486,6 +486,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   height: 200px;
   cursor: crosshair;
   outline: none;
+  font-family: var(--font);
 }
 .chart:focus-visible {
   outline: 2px solid var(--orange);
@@ -699,7 +700,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   overflow: auto;
   background: var(--panel);
   color: var(--text);
-  font-family: Overpass, var(--font), sans-serif;
+  font-family: var(--font);
   border: 1px solid var(--line);
   border-radius: 1.1rem;
   box-shadow: 0 18px 50px rgba(32, 36, 39, 0.16);

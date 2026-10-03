@@ -183,7 +183,7 @@ export function TimeSeriesPlot({
           />
         ) : null}
         <polyline fill="none" stroke={`url(#${strokeId})`} strokeWidth="2.6" points={pts} />
-        <text x={pad.l} y={16} fontSize={14} fontWeight={700} fontFamily="Overpass, sans-serif" fill="#697278">
+        <text x={pad.l} y={16} fontSize={14} fontWeight={700} fontFamily="Satoshi, ui-sans-serif, sans-serif" fill="#697278">
           {label}
         </text>
         {ticks.map((i) => (
@@ -329,10 +329,10 @@ export function DualLinePlot({ volume, speed, labels, volumeLabel, speedLabel }:
         ) : null}
         <polyline fill="none" stroke={`url(#${volStroke})`} strokeWidth="2.6" points={volPts} />
         <polyline fill="none" stroke={`url(#${spdStroke})`} strokeWidth="2.4" points={spdPts} />
-        <text x={pad.l} y={16} fontSize={14} fontWeight={700} fontFamily="Overpass, sans-serif" fill="#F26B38">
+        <text x={pad.l} y={16} fontSize={14} fontWeight={700} fontFamily="Satoshi, ui-sans-serif, sans-serif" fill="#F26B38">
           {volumeLabel}
         </text>
-        <text x={w - pad.r} y={16} fontSize={14} fontWeight={700} fontFamily="Overpass, sans-serif" fill="#168C8C" textAnchor="end">
+        <text x={w - pad.r} y={16} fontSize={14} fontWeight={700} fontFamily="Satoshi, ui-sans-serif, sans-serif" fill="#168C8C" textAnchor="end">
           {speedLabel}
         </text>
         {ticks.map((i) => (
@@ -577,7 +577,7 @@ export function Compass({ counts }: { counts: { N: number; E: number; S: number;
                 fill={arm.color}
                 fontSize="13"
                 fontWeight="700"
-                fontFamily="Overpass, sans-serif"
+                fontFamily="Satoshi, ui-sans-serif, sans-serif"
               >
                 {arm.id}
               </text>
@@ -589,7 +589,7 @@ export function Compass({ counts }: { counts: { N: number; E: number; S: number;
                 fill={arm.color}
                 fontSize="18"
                 fontWeight="700"
-                fontFamily="Overpass, sans-serif"
+                fontFamily="Satoshi, ui-sans-serif, sans-serif"
               >
                 {n.toLocaleString()}
               </text>
@@ -606,7 +606,7 @@ export function Compass({ counts }: { counts: { N: number; E: number; S: number;
           fill="#202427"
           fontSize="11"
           fontWeight="700"
-          fontFamily="Overpass, sans-serif"
+          fontFamily="Satoshi, ui-sans-serif, sans-serif"
         >
           N
         </text>
