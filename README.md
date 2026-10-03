@@ -32,6 +32,34 @@ Use a CUDA PyTorch build on a GPU machine instead of the CPU index above. The re
 
 To try an upload, download [test_video1.mp4](https://github.com/KarimElbasiouni/Traffilytics/releases/download/obb-v1/test_video1.mp4) (62 MB, a UAV-OBB demo clip) and drop it on the Upload page.
 
+## Dashboard
+
+These shots follow one session: log in, upload `test_video1`, then read the finished clip on Overview.
+
+The demo account is on the login page. The links under the form are the source commit, the `obb-v1` release, and the weights file.
+
+![Login page with the demo account and source links](images/Login.png)
+
+Overview stays empty until a clip is selected.
+
+![Overview with no clip selected](images/Overview_empty.png)
+
+Upload accepts MP4, MOV, AVI, or MKV. An optional site label is stored with the clip. With no videos yet, the list under the form is empty.
+
+![Upload page before any clip has been added](images/Upload_empty.png)
+
+After you submit a file, a job runs on the server. The dialog reports ingest, detection, tracking, analytics, and saving. The browser does not wait on the video.
+
+![Job dialog during ingest of an uploaded clip](images/ProcessingVideo.png)
+
+A finished clip appears in the list with status, resolution, and duration. **Open in Overview** loads that clip. **Re-process selected** runs the pipeline again.
+
+![Upload page listing the completed test_video1 clip](images/Upload_existing.png)
+
+Overview for `test_video1`: the boxed overlay, class mix, heading, volume and speed, vehicles in view, one track, and the written findings. Counts and speeds are in the image frame. The note under the player is the UAV-OBB citation. Camera motion can inflate volume and speed, so those figures are scene-relative.
+
+![Overview of the processed test_video1 clip](images/Overview_output.png)
+
 **UAV-OBB** ([Mendeley Data](https://data.mendeley.com/datasets/6snrjwcpkh/3), CC BY 4.0) is the training and evaluation dataset. At runtime Traffilytics processes **user-uploaded video**; the dataset's bundled MP4 clips serve as demo and sanity-check footage. UAV-OBB ships no ground-truth trajectories, so trajectories always come from Traffilytics' own detector and tracker.
 
 Full design docs live under [`docs/`](docs/).

@@ -59,6 +59,7 @@ models/configs/uav_obb_data.yaml
 *.jpeg
 *.png
 !docs/**
+!images/**
 
 # IDE / OS
 .idea/
